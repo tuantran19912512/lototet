@@ -1,0 +1,656 @@
+/* ============================================================
+   LÔ TÔ TẾT - Giao diện dùng chung (chủ đỏ - vàng ngày Tết)
+   Font: Be Vietnam Pro (tiếng Việt, thân thiện) + Baloo 2 (bo tròn, vui tươi)
+   ============================================================ */
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-400.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-600.ttf') format('truetype');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-700.ttf') format('truetype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-800.ttf') format('truetype');
+  font-weight: 800; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('/fonts/Baloo2-700.ttf') format('truetype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('/fonts/Baloo2-800.ttf') format('truetype');
+  font-weight: 800; font-style: normal; font-display: swap;
+}
+:root {
+  --red-dark: #6b0a0d;
+  --red: #a3121a;
+  --red-bright: #d41f2b;
+  --gold: #ffd45e;
+  --gold-deep: #e8a916;
+  --cream: #fff8e7;
+  --ink: #4a1008;
+  --green: #1f9d55;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Be Vietnam Pro', "Segoe UI", Arial, sans-serif;
+  color: var(--cream);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 212, 94, 0.18), transparent 32%),
+    radial-gradient(circle at 88% 82%, rgba(255, 212, 94, 0.14), transparent 30%),
+    linear-gradient(160deg, #7c0f14 0%, #a3121a 45%, #6b0a0d 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Hoa văn trang trí nền */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image:
+    radial-gradient(circle at 20px 20px, #fff 2px, transparent 2px),
+    radial-gradient(circle at 70px 60px, #fff 1.5px, transparent 1.5px);
+  background-size: 100px 100px;
+  z-index: 0;
+}
+
+.app { position: relative; z-index: 1; }
+
+/* ---------------------- Header ---------------------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 28px;
+  background: linear-gradient(90deg, rgba(107, 10, 13, 0.85), rgba(163, 18, 26, 0.6));
+  border-bottom: 2px solid var(--gold-deep);
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand .logo { font-size: 38px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+.brand h1 {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  font-size: 28px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  text-shadow: 0 2px 6px rgba(0,0,0,.45);
+}
+.brand p { font-size: 13px; color: #ffd9a0; opacity: .85; }
+
+.badges { display: flex; gap: 10px; flex-wrap: wrap; }
+.badge {
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,212,94,.45);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.badge b { color: #fff; font-size: 15px; }
+
+/* ---------------------- Layout chính ---------------------- */
+.layout {
+  display: grid;
+  grid-template-columns: 1.35fr 0.95fr;
+  gap: 20px;
+  padding: 20px 28px 40px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: rgba(74, 16, 8, 0.35);
+  border: 1px solid rgba(255, 212, 94, 0.28);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.03);
+}
+.panel h2 {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  font-size: 18px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------------------- Màn hình xổ số ---------------------- */
+.stage-hero {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 20px 28px 0;
+}
+@media (max-width: 980px) {
+  .stage-hero { padding: 16px 16px 0; }
+}
+.stage {
+  position: relative;
+  text-align: center;
+  padding: 26px 16px 22px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255,212,94,.16), transparent 55%),
+    linear-gradient(180deg, rgba(107,10,13,.6), rgba(74,16,8,.5));
+  border: 2px solid var(--gold-deep);
+  overflow: hidden;
+}
+.stage::after {
+  content: "🧧  🏮  🌸  🎊  🧧  🏮  🌸";
+  display: block;
+  margin-top: 10px;
+  font-size: 20px;
+  letter-spacing: 14px;
+  opacity: .7;
+}
+.stage-label { font-size: 15px; color: #ffd9a0; letter-spacing: 3px; }
+
+.big-number {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  font-size: 190px;
+  line-height: 1;
+  font-weight: 900;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0 0 24px rgba(255,212,94,.55),
+    0 6px 0 #b8860b,
+    0 12px 26px rgba(0,0,0,.55);
+  margin: 10px 0 4px;
+  letter-spacing: 6px;
+  transition: transform .12s ease;
+}
+.big-number.spinning {
+  filter: blur(1.5px);
+  opacity: .92;
+  text-shadow: 0 0 34px rgba(255,212,94,.5), 0 6px 0 rgba(184,134,11,.75);
+}
+.big-number.rolling { animation: roll .6s ease; }
+.big-number.pop { animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
+@keyframes roll {
+  0% { transform: scale(.6) rotate(-6deg); opacity: .2; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes pop {
+  0% { transform: scale(.7); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.big-number .placeholder { font-size: 120px; opacity: .35; }
+
+.stage-status { font-size: 14px; color: #ffcf8a; min-height: 20px; }
+
+/* ---------------------- Nút điều khiển ---------------------- */
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.btn {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #fff;
+  transition: transform .1s ease, filter .15s ease, box-shadow .15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn:active { transform: translateY(2px); }
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-primary {
+  background: linear-gradient(180deg, #ffd45e, #e8a916);
+  color: #5a0a0a;
+  box-shadow: 0 6px 0 #a8760b, 0 10px 18px rgba(0,0,0,.3);
+  grid-column: 1 / -1;
+  font-size: 22px;
+  padding: 20px;
+}
+.btn-ghost {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,212,94,.4);
+  color: var(--gold);
+}
+.btn-danger { background: #8d1b22; }
+.btn-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+@media (max-width: 980px) { .btn-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .btn-row { grid-template-columns: 1fr; } }
+
+/* ---------------------- Modal xem trước điện thoại ---------------------- */
+.preview-modal {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0,0,0,.78);
+  display: none; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.preview-modal.show { display: flex; }
+.result-box {
+  width: min(600px, 94vw);
+  background: rgba(74,16,8,.96);
+  border: 2px solid var(--gold);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.6);
+}
+.result-box h2 {
+  font-family: 'Baloo 2', sans-serif; text-align: center;
+  font-size: 30px; color: var(--gold); margin-bottom: 6px;
+}
+.result-meta {
+  text-align: center; font-size: 13px; color: #ffd9a0; margin-bottom: 12px;
+}
+.result-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 9px; margin-bottom: 6px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,212,94,.2);
+}
+.result-row.win { border-color: var(--green); background: rgba(31,157,85,.16); }
+.result-row .r-name { flex: 1; font-size: 14px; color: #fff; }
+.result-row .r-name small { display: block; color: #e8b98a; font-size: 11px; }
+.result-row .r-net { font-family: 'Baloo 2', sans-serif; font-size: 18px; font-weight: 800; }
+.result-row .r-net.plus { color: #7dffa8; }
+.result-row .r-net.minus { color: #ff9a9a; }
+
+.preview-box { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.preview-head {
+  display: flex; align-items: center; gap: 18px;
+  color: var(--gold); font-size: 16px; letter-spacing: 1px;
+}
+.preview-close {
+  background: var(--red-bright); color: #fff; border: 1px solid rgba(255,255,255,.4);
+  border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.preview-close:hover { filter: brightness(1.15); }
+.preview-phone {
+  position: relative;
+  width: 390px; max-width: 94vw;
+  height: min(780px, 78vh);
+  background: #1a1a1a;
+  border: 9px solid #111;
+  border-radius: 34px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.6), 0 0 0 2px rgba(255,212,94,.25);
+  overflow: hidden;
+}
+.preview-notch {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 110px; height: 18px; background: #111;
+  border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+  z-index: 2;
+}
+.preview-phone iframe { display: block; width: 100%; height: 100%; border: 0; background: #6b0a0d; }
+.preview-note { color: #ffd9a0; font-size: 12px; max-width: 420px; text-align: center; opacity: .9; }
+.btn-row .btn { font-size: 14px; padding: 12px; }
+
+/* ---------------------- Cấu hình ---------------------- */
+.config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field label { display: block; font-size: 12px; color: #ffd9a0; margin-bottom: 6px; }
+.field input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,212,94,.35);
+  background: rgba(0,0,0,.25);
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+}
+.field input:focus { border-color: var(--gold); }
+.field .hint { font-size: 11px; color: #e8b98a; margin-top: 4px; }
+.computed-prize {
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(255,212,94,.14); border: 1px dashed rgba(255,212,94,.5);
+  color: var(--gold); font-family: 'Baloo 2', sans-serif;
+  font-size: 20px; font-weight: 800; text-align: center;
+}
+
+/* ---------------------- QR ---------------------- */
+.qr-wrap { text-align: center; }
+.qr-box {
+  background: var(--cream);
+  padding: 10px;
+  border-radius: 12px;
+  display: inline-block;
+  border: 3px solid var(--gold);
+  box-shadow: 0 6px 18px rgba(0,0,0,.3);
+}
+.qr-box img { display: block; width: 190px; height: 190px; }
+.qr-url { margin-top: 10px; font-size: 12px; color: #ffe6b0; word-break: break-all; }
+.qr-tip { font-size: 12px; color: #ffcf8a; margin-top: 6px; }
+
+/* ---------------------- Lịch sử xổ ---------------------- */
+.number-grid { display: flex; flex-wrap: wrap; gap: 8px; max-height: 190px; overflow-y: auto; padding-right: 4px; }
+.num-chip {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  min-width: 46px;
+  text-align: center;
+  padding: 8px 6px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,212,94,.22), rgba(255,212,94,.08));
+  border: 1px solid rgba(255,212,94,.5);
+  color: var(--gold);
+  font-weight: 800;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.num-chip.latest { animation: pop .5s ease; border-color: #fff; color: #fff; }
+.history-list { max-height: 220px; overflow-y: auto; font-size: 13px; }
+.history-item {
+  padding: 10px 8px;
+  border-bottom: 1px dashed rgba(255,212,94,.2);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #ffe6bd;
+}
+.history-item small { color: #e8b98a; }
+.empty { color: #e8b98a; font-size: 13px; font-style: italic; text-align: center; padding: 14px; }
+
+/* ---------------------- Người thắng ---------------------- */
+.winner-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,212,94,.1);
+  border: 1px solid rgba(255,212,94,.3);
+  margin-bottom: 8px;
+}
+.medal { font-size: 26px; }
+.winner-info { flex: 1; }
+.winner-info b { color: var(--gold); }
+.winner-info small { display: block; color: #e8b98a; font-size: 11px; }
+.winner-money { color: #fff; font-weight: 800; text-align: right; font-size: 15px; }
+.ack-dot { color: var(--green); font-size: 13px; }
+.tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+.tab {
+  flex: 1; text-align: center; padding: 8px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; color: #ffd9a0; border: 1px solid rgba(255,212,94,.3);
+}
+.tab.active { background: var(--gold); color: #5a0a0a; font-weight: 800; }
+.hidden { display: none !important; }
+
+/* ---------------------- Toast / thông báo ---------------------- */
+.toast {
+  position: fixed; top: 18px; right: 18px; z-index: 999;
+  background: #fff; color: #4a1008; padding: 14px 18px; border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35); font-weight: 700; font-size: 14px;
+  border-left: 5px solid var(--red-bright); opacity: 0; transform: translateY(-10px);
+  transition: .25s ease; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ============================================================
+   TRANG NGƯỜI CHƠI (điện thoại)
+   ============================================================ */
+.player-app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+  min-height: 100vh;
+}
+.player-header { text-align: center; margin-bottom: 14px; }
+.player-header .logo { font-size: 34px; }
+.player-header h1 { font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif; font-size: 26px; color: var(--gold); margin: 4px 0; }
+.player-header p { font-size: 12px; color: #ffcf8a; }
+
+.status-line {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 13px; color: #ffe6b0; margin-bottom: 14px;
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #888; }
+.dot.online { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+.dot.offline { background: #f87171; }
+
+.name-card {
+  background: rgba(0,0,0,.22); border: 1px solid rgba(255,212,94,.3);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
+}
+.name-card label { font-size: 12px; color: #ffd9a0; display: block; margin-bottom: 6px; }
+.name-row { display: flex; gap: 8px; }
+.name-row input {
+  flex: 1; padding: 10px 12px; border-radius: 9px; font-size: 15px;
+  border: 1px solid rgba(255,212,94,.35); background: rgba(0,0,0,.25); color: #fff; outline: none;
+}
+
+.ticket-card {
+  background: linear-gradient(160deg, rgba(255,248,231,.97), rgba(255,235,190,.95));
+  border-radius: 18px;
+  padding: 18px 14px;
+  border: 3px solid var(--gold-deep);
+  box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  color: var(--ink);
+  position: relative;
+  overflow: hidden;
+}
+.ticket-card::before {
+  content: "🎫 VÉ XỔ SỐ TẾT";
+  display: block; text-align: center; font-weight: 900; font-size: 15px;
+  color: var(--red-dark); letter-spacing: 1px; margin-bottom: 4px;
+}
+.ticket-sub { text-align: center; font-size: 11px; color: #8a5a2b; margin-bottom: 14px; }
+.ticket-name { text-align: center; font-weight: 800; color: var(--red); margin-bottom: 12px; font-size: 15px; }
+
+.numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+}
+.tile {
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #fff;
+  border: 2px solid #e0b563;
+  color: #7a2a12;
+  font-size: 30px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 3px 0 #c9963f;
+  transition: .25s ease;
+  position: relative;
+}
+.tile small { font-size: 9px; font-weight: 700; color: #b07a3a; margin-top: 2px; letter-spacing: .5px; }
+.tile.matched {
+  background: linear-gradient(180deg, #b7f0c8, #7ddb9a);
+  border-color: var(--green);
+  color: #0c5e30;
+  box-shadow: 0 3px 0 #2f8a55;
+  transform: scale(1.03);
+}
+.tile.matched::after {
+  content: "✓ ĐÃ TRÚNG";
+  position: absolute; bottom: 4px; font-size: 8px; color: #0c5e30; font-weight: 800;
+}
+.tile.matched small { display: none; }
+
+.ticket-footer { text-align: center; margin-top: 14px; font-size: 12px; color: #8a5a2b; }
+.progress { height: 8px; background: rgba(138,90,43,.2); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+.progress > div { height: 100%; background: linear-gradient(90deg, var(--gold-deep), var(--green)); width: 0; transition: width .4s ease; }
+
+/* Last drawn number strip */
+.last-draw {
+  margin: 0 0 14px; text-align: center; background: rgba(0,0,0,.28);
+  border: 2px solid var(--gold-deep); border-radius: 12px; padding: 10px 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.25);
+}
+.last-draw span { font-size: 12px; color: #ffcf8a; }
+.last-draw b { font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif; display: block; font-size: 40px; color: var(--gold); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+/* ---------------------- Overlay KINH ---------------------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: radial-gradient(circle at 50% 40%, rgba(212,31,43,.96), rgba(107,10,13,.98));
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 24px; opacity: 0; pointer-events: none; transition: .3s ease;
+}
+.overlay.show { opacity: 1; pointer-events: auto; }
+.overlay .fireworks { font-size: 46px; letter-spacing: 8px; animation: bounce 1.2s infinite alternate; }
+@keyframes bounce { from { transform: translateY(0);} to { transform: translateY(-12px);} }
+.overlay h2 {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  font-size: 72px; color: var(--gold); margin: 12px 0;
+  text-shadow: 0 0 30px rgba(255,212,94,.7), 0 6px 0 #a8760b;
+  animation: pop .6s cubic-bezier(.2,1.6,.4,1);
+}
+.overlay .win-pos { font-size: 26px; color: #fff; font-weight: 800; }
+.overlay .win-money { font-size: 22px; color: #fff; margin: 8px 0 4px; }
+.overlay .win-money b { color: var(--gold); font-size: 30px; }
+.overlay .win-note { font-size: 13px; color: #ffd9a0; margin-bottom: 20px; }
+.overlay .btn { min-width: 220px; }
+
+/* ============================================================
+   VÉ LÔ TÔ TRUYỀN THỐNG (nhiều hàng ngang)
+   ============================================================ */
+.loto-card { padding: 12px 10px; }
+.loto-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  border-bottom: 2px solid #7a2a12; padding-bottom: 8px; margin-bottom: 8px;
+  font-size: 11px; color: #6b2a10; line-height: 1.5;
+}
+.loto-head-left b { font-size: 13px; color: var(--red-dark); }
+.loto-head-right { text-align: center; font-size: 20px; color: var(--red); }
+.loto-head-right small { font-size: 9px; color: #8a5a2b; display: block; line-height: 1.2; }
+
+.rows-grid { display: flex; flex-direction: column; gap: 5px; }
+.loto-row {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 4px; border-radius: 7px;
+  background: rgba(255,255,255,.45); border: 1px solid #dcb477;
+  position: relative;
+}
+.loto-row.row-kinh {
+  background: linear-gradient(90deg, #b7f0c8, #7ddb9a);
+  border-color: var(--green);
+}
+.row-label { font-size: 8px; color: #9a6a35; width: 27px; flex: none; font-weight: 700; line-height: 1.1; }
+.row-cells { display: flex; gap: 2px; flex: 1; justify-content: space-between; }
+.loto-cell {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  flex: 1; min-width: 0; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; border: 1px solid #c9a468; border-radius: 4px;
+  font-size: 12px; font-weight: 900; color: #7a2a12;
+  font-variant-numeric: tabular-nums;
+}
+.loto-cell.blank { background: transparent; border-color: transparent; }
+.loto-cell.matched {
+  background: linear-gradient(180deg, #b7f0c8, #74d192);
+  border-color: var(--green); color: #0c5e30;
+}
+.row-badge {
+  font-size: 8px; font-weight: 800; padding: 2px 3px; border-radius: 4px;
+  white-space: nowrap; flex: none;
+}
+.row-badge.kinh { background: var(--green); color: #fff; }
+.row-badge.doi { background: #ff9f1c; color: #4a1008; animation: blink 1.1s infinite alternate; }
+@keyframes blink { from { opacity: .65; } to { opacity: 1; } }
+
+.wallet-card {
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,212,94,.4);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;
+}
+.wallet-top {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 14px; color: #ffd9a0; padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(255,212,94,.3);
+}
+.wallet-top b { font-family: 'Baloo 2', sans-serif; font-size: 22px; color: var(--gold); }
+.wallet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 9px; }
+.wallet-grid div { text-align: center; }
+.wallet-grid span { display: block; font-size: 10px; color: #e8b98a; }
+.wallet-grid b { font-size: 13px; color: #fff; font-variant-numeric: tabular-nums; }
+.wallet-recharge { display: flex; gap: 8px; margin-top: 10px; }
+.wallet-recharge input {
+  flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; font-size: 13px;
+  border: 1px solid rgba(255,212,94,.35); background: rgba(0,0,0,.25); color: #fff; outline: none;
+}
+.wallet-recharge .btn { padding: 8px 12px; font-size: 14px; }
+
+.buy-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-top: 12px;
+}
+.buy-row label { font-size: 12px; color: #ffd9a0; }
+.buy-row select {
+  padding: 8px 12px; border-radius: 9px; font-size: 14px; font-weight: 700;
+  border: 1px solid rgba(255,212,94,.45); background: #4a1008; color: var(--gold);
+  outline: none;
+}
+.buy-row select:disabled { opacity: .6; }
+
+.ticket-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 2px; }
+.ticket-tab {
+  flex: none; padding: 8px 12px; border-radius: 9px; cursor: pointer;
+  font-size: 12px; font-weight: 800; white-space: nowrap;
+  background: rgba(0,0,0,.25); color: #ffd9a0;
+  border: 1px solid rgba(255,212,94,.35);
+}
+.ticket-tab.active { background: var(--gold); color: #5a0a0a; border-color: #fff; }
+
+.preview-badge {
+  background: rgba(255,159,28,.25); border: 1px dashed #ff9f1c;
+  color: #ffdf9e; border-radius: 9px; padding: 8px 10px;
+  font-size: 12px; text-align: center; margin-bottom: 12px; font-weight: 700;
+}
+
+.ticket-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.ticket-actions .btn { padding: 14px 10px; font-size: 15px; }
+.ticket-actions .btn-primary {
+  grid-column: auto; font-size: 15px; padding: 14px 10px;
+  box-shadow: 0 4px 0 #a8760b, 0 8px 16px rgba(0,0,0,.3);
+}
+.lock-status {
+  background: rgba(31,157,85,.22); border: 1px solid var(--green);
+  color: #c9ffdd; border-radius: 10px; padding: 10px 12px;
+  font-size: 13px; text-align: center; margin-bottom: 12px; font-weight: 700;
+}
+
+.waiting-banner {
+  background: linear-gradient(90deg, #ff9f1c, #ffd45e);
+  color: #4a1008; font-weight: 800; font-size: 13px;
+  padding: 11px 14px; border-radius: 10px; margin-bottom: 12px;
+  border: 2px solid #c4760b; text-align: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,.25);
+}
+
+/* rung điện thoại */
+@keyframes shake {
+  0%,100% { transform: translate(0,0); }
+  20% { transform: translate(-6px, 4px); }
+  40% { transform: translate(6px, -4px); }
+  60% { transform: translate(-4px, -4px); }
+  80% { transform: translate(4px, 4px); }
+}
+.shake { animation: shake .5s ease 3; }

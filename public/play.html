@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Vé của tôi - Lô Tô Tết</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="player-app">
+    <div class="player-header">
+      <div class="logo">🧧</div>
+      <h1>VÉ XỔ LÔ TÔ TẾT 🎊</h1>
+      <p>Đủ cả một hàng ngang là KINH · Chúc bạn trúng lớn!</p>
+    </div>
+
+    <div class="status-line">
+      <span id="dot" class="dot offline"></span>
+      <span id="statusText">Đang kết nối…</span>
+    </div>
+    <div id="previewBadge" class="preview-badge hidden">👀 CHẾ ĐỘ XEM TRƯỚC · vé này không tính vào 200 vé</div>
+
+    <!-- Số vừa xổ đưa lên đầu để dễ nhìn -->
+    <div class="last-draw">
+      <span>SỐ VỪA XỔ</span>
+      <b id="lastNumber">--</b>
+    </div>
+
+    <div class="name-card">
+      <label>Tên của bạn</label>
+      <div class="name-row">
+        <input id="nameInput" type="text" maxlength="20" placeholder="Nhập tên..." />
+        <button id="btnSaveName" class="btn btn-ghost" style="padding:10px 14px;font-size:14px">Lưu</button>
+      </div>
+      <div class="buy-row">
+        <label for="ticketCount">Số vé muốn mua (tối đa 4)</label>
+        <select id="ticketCount">
+          <option value="1" selected>1 vé</option>
+          <option value="2">2 vé</option>
+          <option value="3">3 vé</option>
+          <option value="4">4 vé</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="wallet-card">
+      <div class="wallet-top"><span>💰 Số dư</span><b id="walletBalance">0đ</b></div>
+      <div class="wallet-grid">
+        <div><span>Đã nạp</span><b id="walletDeposited">0đ</b></div>
+        <div><span>Đã trừ cược</span><b id="walletBet">0đ</b></div>
+        <div><span>Đã tích thưởng</span><b id="walletWon">0đ</b></div>
+      </div>
+      <div class="wallet-recharge">
+        <input id="topupInput" type="number" min="0" step="1000" placeholder="Nhập tiền nạp (VNĐ)..." />
+        <button id="btnTopup" class="btn btn-ghost">+ Nạp</button>
+      </div>
+    </div>
+
+    <div class="ticket-actions">
+      <button id="btnChange" class="btn btn-ghost">🔄 ĐỔI VÉ</button>
+      <button id="btnLock" class="btn btn-primary">🔒 CHỐT VÉ</button>
+    </div>
+    <div id="lockStatus" class="lock-status hidden">🔒 Đã chốt <b id="lockedCode"></b> — bạn đã vào danh sách người chơi!</div>
+
+    <div id="waitingBanner" class="waiting-banner hidden">
+      ⏳ Hàng <b id="waitRow">1</b> còn <b>1 số</b> — đang đợi số <b id="waitNum">00</b>!
+    </div>
+
+    <div id="ticketTabs" class="ticket-tabs hidden"></div>
+
+    <div class="ticket-card loto-card">
+      <div class="loto-head">
+        <div class="loto-head-left">
+          <b>VÉ LÔ TÔ SỐ</b><br/>
+          <span>Vòng loại: <b id="lotoRound">9</b></span><br/>
+          <span>Số thứ tự: <b id="lotoSerial">...</b></span>
+        </div>
+        <div class="loto-head-right">
+          🎫🧧<br/>
+          <small>Kinh trúng<br/>tặng phổ chia đều</small>
+        </div>
+      </div>
+      <div id="ticketName" class="ticket-name"></div>
+      <div id="rowsGrid" class="rows-grid"></div>
+      <div class="ticket-footer">
+        <span id="progressText">0 / 0 số đã trúng</span>
+        <div class="progress"><div id="progressBar"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay báo KINH -->
+  <div id="winOverlay" class="overlay">
+    <div class="fireworks">🎆 🎉 🎊 ✨ 🎆</div>
+    <h2>KINH! 🎉</h2>
+    <div id="winPos" class="win-pos"></div>
+    <div id="winMoney" class="win-money"></div>
+    <div id="winNote" class="win-note"></div>
+    <button id="btnAck" class="btn btn-primary">📱 GỬI PHẢN HỒI VỀ MÀN HÌNH CHÍNH</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/player.js"></script>
+</body>
+</html>

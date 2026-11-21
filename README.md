@@ -16,7 +16,10 @@ Trang chơi lô tô trên **LAN**: màn hình chính (host) + trang người ch�
 1. Quét QR → nhập tên → chọn **Số vé muốn mua (1–4)** → nhận các **vé random** trong kho **200 vé** (mã `V001`…`V200`). Ô **SỐ VỪA XỔ** nằm ngay đầu trang để dễ nhìn. Mua nhiều vé thì dùng các tab **Vé 1 / Vé 2…** để chuyển đổi; nút Đổi vé đổi vé đang chọn, nút Chốt vé chốt tất cả.
 2. Nhấn **🔄 ĐỔI VÉ** để đổi sang bộ vé khác (có thể đổi nhiều lần, trước khi chốt).
 3. Ứng ý thì nhấn **🔒 CHỐT VÉ** → tên và mã vé hiện ngay trong **danh sách người chơi đã chốt** trên màn hình chính. Sau khi chốt **không đổi vé được nữa**.
-4. Host bấm **XỔ SỐ NGAY**: số quay nhanh rồi **chậm dần ~6 giây** mới dừng lại (có thể chỉnh **Thời gian quay** 2–15s ở màn hình chính, đổi không cần tạo ván mới). Trong lúc quay nút bị khóa, bấm liên tục sẽ bị từ chối. Kết quả (đánh dấu vé, báo kinh) chỉ áp dụng sau khi số dừng.
+4. Chọn một trong hai cách xổ:
+   - **🎲 XỔ SỐ NGAY**: số quay nhanh rồi **chậm dần ~6 giây** mới dừng (chỉnh **Thời gian quay** 2–15s). Bấm liên tục sẽ bị từ chối.
+   - **🤖 TỰ XỔ ĐẾN KHI CÓ KINH**: server tự xổ từng số (dùng **Quay tự động**, mặc định 2s/lượt, chỉnh 0.3–15s) và **tự dừng ngay khi có người kinh**. Nút biến thành **⏹ DỪNG TỰ XỔ** nếu muốn dừng sớm.
+5. Khi tự xổ dừng, màn hình chính hiện **bảng tổng kết**: tổng giải, tiền mỗi kinh, danh sách từng người (số vé, tiền cược, số hàng kinh, tiền thưởng) và **số tiền ròng** — thắng `+Xđ` (xanh), thua `-Xđ` (đỏ). Có nút **🔄 QUAY TIẾP LƯỢT MỚI** (tạo ván mới) hoặc **ĐÓNG**.
 5. Khi trúng hàng → điện thoại báo **KINH** (rung + pháo hoa), bấm gửi phản hồi → hiện trên màn hình chính.
 6. **Kết thúc & Lưu** ghi ván vào lịch sử; **Ván mới** phát lại 200 vé.
 
@@ -31,7 +34,7 @@ Trang chơi lô tô trên **LAN**: màn hình chính (host) + trang người ch�
 
 ## Cài đặt & chạy
 ```bash
-cd E:\Tools_Vip\Tools\Loto
+cd E:\Tools_Vip\Tools\lototet
 npm install
 npm start
 ```
@@ -39,11 +42,19 @@ Hoặc double-click `Chay-May-Chu.cmd`. Server tại `http://localhost:3000`.
 
 ## Cấu hình trên màn hình chính
 - **Số vé (tối đa)** — mặc định `200` (có thể chỉnh).
-- **Tổng tiền giải (VNĐ)** — mặc định `1.000.000đ`.
+- **Tổng tiền giải được tính tự động**, KHÔNG cố định: `Tổng giải = số vé đã bán × mức cược/vé`. Ví dụ bán 200 vé × 5.000đ = **1.000.000đ**.
+- **Mức cược mỗi vé (VNĐ)** — mặc định `5.000đ/vé`; hiện trên TV và dùng để tính ví người chơi.
+- Tiền giải chia đều cho các hàng kinh: `prizePerWinner = Tổng giải ÷ số hàng kinh`.
+- Mọi số tiền đều hiển thị có dấu `.` phân tách hàng nghìn (vd `1.000.000đ`).
+
+## Ví tiền trên điện thoại
+- Trang người chơi có ví: **Số dư = Đã nạp − Đã trừ cược + Đã tích thưởng**.
+- Khi nhận vé, hệ thống trừ `số vé × mức cược`; mỗi lần KINH cộng thêm tiền thưởng tương ứng.
+- Có ô **Nạp tiền** để tăng số dư. Ví lưu trong trình duyệt (`localStorage`); vé xem trước không bị trừ tiền.
 
 ## Cấu trúc
 ```
-Loto/
+lototet/
 ├─ server.js              # Express + Socket.IO, lưới vé 9x9, đổi/chốt vé, luật KINH
 ├─ package.json
 ├─ Chay-May-Chu.cmd

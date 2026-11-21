@@ -1,0 +1,176 @@
+/* ============================================================
+   MÀN HÌNH TV - chiếu số xổ và người chiến thắng
+   ============================================================ */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body.tv-body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+  background: #5c0a0d;
+}
+
+.tv-app {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  row-gap: 1.2vh;
+  padding: 1.6vh 2.5vw 1.6vh;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 212, 94, 0.20), transparent 46%),
+    radial-gradient(circle at 8% 12%, rgba(255,212,94,.12), transparent 25%),
+    radial-gradient(circle at 92% 88%, rgba(255,212,94,.12), transparent 25%),
+    linear-gradient(160deg, #7c0f14 0%, #a3121a 48%, #5c0a0d 100%);
+}
+.tv-app::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .05;
+  background-image:
+    radial-gradient(circle at 20px 20px, #fff 2px, transparent 2px),
+    radial-gradient(circle at 70px 60px, #fff 1.5px, transparent 1.5px);
+  background-size: 100px 100px;
+}
+
+.tv-top { position: relative; text-align: center; flex: none; }
+.tv-top-deco { font-size: clamp(14px, 1.5vw, 26px); letter-spacing: .5em; opacity: .85; }
+.tv-top h1 {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  font-weight: 800;
+  font-size: clamp(28px, 3.2vw, 60px);
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin: .2vh 0;
+  text-shadow: 0 4px 10px rgba(0,0,0,.5), 0 0 24px rgba(255,212,94,.35);
+}
+.tv-sub { font-size: clamp(11px, 1vw, 18px); color: #ffd9a0; opacity: .9; }
+
+.tv-main {
+  position: relative; min-height: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.tv-number-wrap {
+  text-align: center; width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+  gap: .8vh;
+}
+.tv-label {
+  font-size: clamp(14px, 1.4vw, 26px);
+  letter-spacing: .5em;
+  color: #ffd9a0;
+  margin-bottom: .4vh;
+}
+.tv-number {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  font-weight: 800;
+  font-size: clamp(120px, 24vw, 360px);
+  line-height: .98;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .04em;
+  text-shadow:
+    0 0 50px rgba(255,212,94,.65),
+    0 10px 0 #b8860b,
+    0 22px 40px rgba(0,0,0,.55);
+  transition: transform .12s ease;
+}
+.tv-number .tv-placeholder { opacity: .3; }
+.tv-number.spinning { filter: blur(4px); opacity: .9; }
+.tv-number.pop { animation: tvPop .55s cubic-bezier(.2,1.6,.4,1); }
+@keyframes tvPop {
+  0% { transform: scale(.75); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.tv-status { font-size: clamp(12px, 1.1vw, 20px); color: #ffe6b0; min-height: 1.5em; }
+.tv-bet {
+  display: inline-block; margin-top: .6vh;
+  font-size: clamp(13px, 1.3vw, 22px); color: #ffe6b0;
+  background: rgba(255,212,94,.14); border: 1px solid rgba(255,212,94,.45);
+  border-radius: 999px; padding: 4px 18px;
+}
+.tv-bet b { color: var(--gold); font-size: 1.15em; }
+
+.tv-winner {
+  position: relative;
+  flex: none;
+  min-height: 12vh;
+  margin: 0 auto;
+  width: min(1100px, 94%);
+  border-radius: 18px;
+  border: 2px solid rgba(255,212,94,.45);
+  background: rgba(74,16,8,.45);
+  padding: 1.2vh 2vw;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: .25s ease;
+}
+.tv-winner.has-winner {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(255,212,94,.28), rgba(163,18,26,.5));
+  box-shadow: 0 0 40px rgba(255,212,94,.35);
+  animation: tvGlow 1.4s infinite alternate;
+}
+@keyframes tvGlow {
+  from { box-shadow: 0 0 24px rgba(255,212,94,.25); }
+  to { box-shadow: 0 0 55px rgba(255,212,94,.55); }
+}
+.tv-winner-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: clamp(22px, 2.6vw, 46px);
+  color: #ffd9a0;
+}
+.tv-winner.has-winner .tv-winner-title { color: var(--gold); text-shadow: 0 0 20px rgba(255,212,94,.6); }
+.tv-winner-name {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: clamp(18px, 2.2vw, 40px);
+  font-weight: 800;
+  color: #fff;
+}
+.tv-winner-info { font-size: clamp(11px, 1.1vw, 19px); color: #ffe6b0; }
+.tv-winner-money { font-size: clamp(14px, 1.5vw, 26px); font-weight: 800; color: var(--gold); }
+
+.tv-history {
+  position: relative;
+  flex: none;
+  height: 7.5vh;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+}
+.tv-chip {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: clamp(15px, 1.5vw, 26px);
+  font-weight: 800;
+  color: var(--gold);
+  border: 1px solid rgba(255,212,94,.55);
+  border-radius: 10px;
+  padding: 4px 12px;
+  background: rgba(255,212,94,.16);
+  white-space: nowrap;
+}
+.tv-chip.latest { color: #fff; border-color: #fff; background: rgba(255,255,255,.18); }
+
+.tv-footer {
+  position: relative;
+  flex: none;
+  display: flex;
+  justify-content: space-around;
+  gap: 12px;
+  border-top: 1px solid rgba(255,212,94,.3);
+  padding-top: 1vh;
+  font-size: clamp(12px, 1.2vw, 20px);
+  color: #ffd9a0;
+}
+.tv-footer b { color: #fff; font-size: 1.15em; }

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Màn hình TV - Xổ Lô Tô Tết</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/tv.css" />
+</head>
+<body class="tv-body">
+  <div class="tv-app">
+    <header class="tv-top">
+      <div class="tv-top-deco">🧧 🏮 🌸 🎊 🏮 🧧</div>
+      <h1>XỔ LÔ TÔ NGÀY TẾT</h1>
+      <div class="tv-sub">Chúc mừng năm mới · Vạn sự như ý · Lô tô trúng lớn!</div>
+    </header>
+
+    <main class="tv-main">
+      <div id="tvNumberWrap" class="tv-number-wrap">
+        <div class="tv-label">SỐ VỪA XỔ</div>
+        <div id="tvNumber" class="tv-number"><span class="tv-placeholder">--</span></div>
+        <div id="tvStatus" class="tv-status">Sẵn sàng · Chờ lượt xổ đầu tiên</div>
+        <div class="tv-bet">💵 Mức cược: <b id="tvBet">5.000đ/vé</b></div>
+      </div>
+    </main>
+
+    <section id="tvWinner" class="tv-winner">
+      <div id="tvWinnerTitle" class="tv-winner-title">🎉 KINH! 🎉</div>
+      <div id="tvWinnerName" class="tv-winner-name">Chưa có người kinh</div>
+      <div id="tvWinnerInfo" class="tv-winner-info">Đang chờ người may mắn…</div>
+      <div id="tvWinnerMoney" class="tv-winner-money"></div>
+    </section>
+
+    <div id="tvHistory" class="tv-history"></div>
+
+    <footer class="tv-footer">
+      <div>👥 Đã chốt: <b id="tvPlayers">0</b></div>
+      <div>🔢 Đã xổ: <b id="tvDrawn">0</b></div>
+      <div>🏆 Kinh: <b id="tvKinh">0</b></div>
+      <div>💰 Mỗi kinh: <b id="tvPrize">0đ</b></div>
+      <div>💵 Tổng giải: <b id="tvPool">0đ</b></div>
+    </footer>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/tv.js"></script>
+</body>
+</html>

@@ -109,8 +109,9 @@ function gridSignature(rows) {
 function freshGame(config) {
   const cfg = Object.assign({
     maxPlayers: 200,
-    prize: 1000000,
+    betPerTicket: 5000,
     rollSeconds: 6,
+    autoRollSeconds: 2,
     minNumber: 1,
     maxNumber: 90,
   }, config || {});
@@ -147,10 +148,14 @@ let game = readJSON(STATE_FILE, null);
 if (!game || !game.config || !Array.isArray(game.drawn) || !Array.isArray(game.tickets)) {
   game = freshGame();
 }
-game.config = Object.assign({ maxPlayers: 200, prize: 1000000, rollSeconds: 6, minNumber: 1, maxNumber: 90 }, game.config || {});
+game.config = Object.assign({ maxPlayers: 200, betPerTicket: 5000, rollSeconds: 6, autoRollSeconds: 2, minNumber: 1, maxNumber: 90 }, game.config || {});
 
 // Đang trong lượt quay số (chưa chốt kết quả)
 let rolling = false;
+
+// Chế độ tự xổ liên tục cho đến khi có người KINH
+let autoRunning = false;
+let roundStartWinners = 0;
 
 // Vé dùng để XEM TRƯỚC trên trang quản lý (tách riêng, không tính vào 200 vé)
 let previewTickets = [];
@@ -165,8 +170,14 @@ function appendHistory() {
   });
   writeJSON(HISTORY_FILE, history.slice(0, 50));
 }
+// Tổng giải = tổng tiền cược thực thu = số vé đã bán × mức cược/vé
+function prizePool() {
+  const sold = game.tickets.filter((t) => t.owner).length;
+  return sold * (Number(game.config.betPerTicket) || 0);
+}
 function prizePerWinner() {
-  return game.winners.length ? Math.floor(game.config.prize / game.winners.length) : game.config.prize;
+  const pool = prizePool();
+  return game.winners.length ? Math.floor(pool / game.winners.length) : pool;
 }
 function lockedPlayers() {
   return game.tickets
@@ -225,10 +236,20 @@ function multiPayload(playerId, activeCode) {
   };
 }
 function previewPayload(pv) {
+  return previewMultiPayload(pv.playerId, pv.code);
+}
+function previewMultiPayload(playerId, activeCode) {
+  const owned = previewTickets.filter((t) => t.playerId === playerId);
+  const active = owned.find((t) => t.code === activeCode) || owned[0];
   return {
-    code: pv.code, name: pv.name, locked: pv.locked,
-    rows: serializeRows(pv), activeCode: pv.code,
-    tickets: [{ code: pv.code, name: pv.name, locked: pv.locked, won: pv.won, rows: serializeRows(pv) }],
+    code: active ? active.code : '',
+    name: active ? active.name : '',
+    locked: active ? active.locked : false,
+    rows: active ? serializeRows(active) : [],
+    activeCode: active ? active.code : '',
+    tickets: owned.map((t) => ({
+      code: t.code, name: t.name, locked: t.locked, won: t.won, rows: serializeRows(t),
+    })),
     drawn: game.drawn, config: game.config,
   };
 }
@@ -241,7 +262,7 @@ function emitHostState() {
     maxPlayers: game.config.maxPlayers,
     waitingCount: countWaiting(),
     winners: game.winners,
-    prize: game.config.prize,
+    prize: prizePool(),
     prizePerWinner: prizePerWinner(),
     players: lockedPlayers(),
     history: readJSON(HISTORY_FILE, []),
@@ -295,7 +316,7 @@ function pickFreeTicket(exclude) {
 }
 
 /* ---------------- Xổ số (quay rồi chốt) ---------------- */
-function doDraw(manualNumber) {
+function doDraw(manualNumber, onDone, durationOverride) {
   if (rolling) {
     io.emit('draw:error', { message: 'Đang quay số, vui lòng đợi…' });
     return;
@@ -315,7 +336,9 @@ function doDraw(manualNumber) {
     num = available[Math.floor(Math.random() * available.length)];
   }
 
-  const duration = Math.max(1000, Math.min(20000, (Number(cfg.rollSeconds) || 6) * 1000));
+  const duration = durationOverride
+    ? Math.max(300, Math.min(20000, Number(durationOverride)))
+    : Math.max(1000, Math.min(20000, (Number(cfg.rollSeconds) || 6) * 1000));
   const snapshot = game;              // nếu đổi ván trong lúc quay thì bỏ kết quả cũ
   rolling = true;
   io.emit('draw:rolling', { duration, min: cfg.minNumber, max: cfg.maxNumber });
@@ -366,10 +389,10 @@ function doDraw(manualNumber) {
           if (ticket.socketId) {
             io.to(ticket.socketId).emit('kinh:notify', {
               winner: {
-                playerId: ticket.playerId, code: 'PREVIEW', name: 'XEM TRƯỚC',
+                playerId: ticket.playerId, code: ticket.code, name: 'XEM TRƯỚC',
                 row: ri + 1, position: row.kinhPosition, time: Date.now(),
               },
-              prize: game.config.prize, prizePerWinner: game.config.prize, totalWinners: 1,
+              prize: prizePool(), prizePerWinner: prizePool(), totalWinners: 1,
             });
           }
         } else if (!row.complete && unmatched.length === 1 && !row.waitingNotified) {
@@ -381,8 +404,12 @@ function doDraw(manualNumber) {
           }
         }
       });
-      if (ticket.socketId) {
-        io.to(ticket.socketId).emit('ticket:update', previewPayload(ticket));
+    });
+    const previewSockets = new Set();
+    previewTickets.forEach((ticket) => {
+      if (ticket.socketId && !previewSockets.has(ticket.socketId)) {
+        previewSockets.add(ticket.socketId);
+        io.to(ticket.socketId).emit('ticket:update', previewMultiPayload(ticket.playerId));
       }
     });
 
@@ -404,7 +431,7 @@ function doDraw(manualNumber) {
     newKinh.forEach(({ ticket, winner }) => {
       if (ticket.socketId) {
         io.to(ticket.socketId).emit('kinh:notify', {
-          winner, prize: game.config.prize,
+          winner, prize: prizePool(),
           prizePerWinner: prizePerWinner(), totalWinners: game.winners.length,
         });
       }
@@ -417,7 +444,64 @@ function doDraw(manualNumber) {
     }
     rolling = false;
     emitHostState();
+    if (typeof onDone === 'function') onDone();
   }, duration);
+}
+
+/* ---------------- Tự xổ đến khi có KINH ---------------- */
+function buildRoundSummary() {
+  const pool = prizePool();
+  const roundWinners = game.winners.slice(roundStartWinners);
+  const per = roundWinners.length ? Math.floor(pool / roundWinners.length) : 0;
+
+  const map = new Map();
+  game.tickets.filter((t) => t.owner).forEach((t) => {
+    let p = map.get(t.owner);
+    if (!p) {
+      p = { playerId: t.owner, name: t.name, tickets: 0, bet: 0, kinh: 0, win: 0, net: 0 };
+      map.set(t.owner, p);
+    }
+    p.tickets++;
+    p.bet += Number(game.config.betPerTicket) || 0;
+  });
+  roundWinners.forEach((w) => {
+    const p = map.get(w.playerId);
+    if (p) { p.kinh++; p.win += per; }
+  });
+  const players = [...map.values()].map((p) => Object.assign(p, { net: p.win - p.bet }));
+  players.sort((a, b) => b.net - a.net);
+
+  return {
+    pool, per, winnerCount: roundWinners.length,
+    winners: roundWinners, players,
+    drawn: game.drawn.slice(),
+  };
+}
+
+function nextAutoDraw() {
+  if (!autoRunning) return;
+  // Hết số thì dừng
+  const available = [];
+  for (let n = game.config.minNumber; n <= game.config.maxNumber; n++) {
+    if (!game.drawn.includes(n)) available.push(n);
+  }
+  if (!available.length) {
+    autoRunning = false;
+    io.emit('auto:stopped', Object.assign(buildRoundSummary(), { exhausted: true }));
+    io.emit('auto:state', { running: false });
+    return;
+  }
+  const autoMs = Math.max(300, Math.min(20000, (Number(game.config.autoRollSeconds) || 2) * 1000));
+  doDraw(undefined, () => {
+    if (!autoRunning) return;
+    if (game.winners.length > roundStartWinners) {
+      autoRunning = false;
+      io.emit('auto:state', { running: false });
+      io.emit('auto:stopped', buildRoundSummary());
+    } else {
+      setTimeout(nextAutoDraw, 400);
+    }
+  }, autoMs);
 }
 
 /* ---------------- Socket ---------------- */
@@ -426,20 +510,27 @@ io.on('connection', (socket) => {
 
   // Chỉ đổi thời gian quay, không làm mất ván đang chơi
   socket.on('settings:update', (s) => {
-    if (!s || !s.rollSeconds) return;
-    game.config.rollSeconds = Math.max(2, Math.min(15, Number(s.rollSeconds) || 6));
+    if (!s) return;
+    if (s.rollSeconds !== undefined) {
+      game.config.rollSeconds = Math.max(2, Math.min(15, Number(s.rollSeconds) || 6));
+    }
+    if (s.autoRollSeconds !== undefined) {
+      game.config.autoRollSeconds = Math.max(0.3, Math.min(15, Number(s.autoRollSeconds) || 2));
+    }
     persistState();
     emitHostState();
   });
 
   socket.on('config:update', (cfg) => {
     const maxPlayers = Math.max(1, Math.min(1000, Number(cfg.maxPlayers) || 200));
-    const prize = Math.max(0, Number(cfg.prize) || 0);
     const rollSeconds = Math.max(2, Math.min(15, Number(cfg.rollSeconds) || game.config.rollSeconds || 6));
+    const autoRollSeconds = Math.max(0.3, Math.min(15, Number(cfg.autoRollSeconds) || game.config.autoRollSeconds || 2));
+    const betPerTicket = Math.max(0, Number(cfg.betPerTicket) || 5000);
     rolling = false;
+    autoRunning = false;
     previewTickets = [];
     io.emit('draw:cancel');
-    game = freshGame({ maxPlayers, prize, rollSeconds });
+    game = freshGame({ maxPlayers, rollSeconds, autoRollSeconds, betPerTicket });
     persistState();
     io.emit('game:reset', { config: game.config });
     emitHostState();
@@ -448,11 +539,13 @@ io.on('connection', (socket) => {
 
   socket.on('game:new', () => {
     rolling = false;
+    autoRunning = false;
     previewTickets = [];
     io.emit('draw:cancel');
     game = freshGame(game.config);
     persistState();
     io.emit('game:reset', { config: game.config });
+    io.emit('auto:state', { running: false });
     emitHostState();
     sendQR();
   });
@@ -463,7 +556,31 @@ io.on('connection', (socket) => {
     emitHostState();
   });
 
-  socket.on('draw:request', (payload) => { doDraw(payload && payload.manual); });
+  socket.on('draw:request', (payload) => {
+    if (autoRunning) {
+      io.emit('draw:error', { message: 'Đang tự xổ… bấm DỪNG nếu muốn dừng.' });
+      return;
+    }
+    doDraw(payload && payload.manual);
+  });
+
+  socket.on('auto:start', () => {
+    if (rolling || autoRunning) {
+      io.emit('draw:error', { message: 'Đang quay rồi, vui lòng đợi…' });
+      return;
+    }
+    autoRunning = true;
+    roundStartWinners = game.winners.length;
+    io.emit('auto:state', { running: true, round: roundStartWinners + 1 });
+    nextAutoDraw();
+  });
+
+  socket.on('auto:stop', () => {
+    if (!autoRunning) return;
+    autoRunning = false;
+    io.emit('auto:state', { running: false });
+    io.emit('auto:stopped', Object.assign(buildRoundSummary(), { cancelled: true }));
+  });
 
   socket.on('player:join', (payload) => {
     const playerId = payload && payload.playerId;
@@ -471,18 +588,26 @@ io.on('connection', (socket) => {
 
     // Chế độ XEM TRƯỚC: vé riêng, không tính vào kho 200 vé / danh sách chốt
     if (payload.preview) {
-      let pv = previewTickets.find((t) => t.playerId === playerId);
-      if (!pv) {
-        const rows = buildGrid(game.drawn);
-        rows.forEach((r) => { if (r.complete) r.awarded = true; });
-        pv = {
-          playerId, code: 'PREVIEW', name: 'XEM TRƯỚC', locked: false,
-          socketId: socket.id, rows, won: false, previewKinhCount: 0,
-        };
-        previewTickets.push(pv);
+      const want = Math.max(1, Math.min(4, Number(payload.ticketCount) || 1));
+      let owned = previewTickets.filter((t) => t.playerId === playerId);
+      // Đổi số vé muốn mua trong khung xem trước -> tạo lại bộ vé xem trước
+      if (owned.length !== want) {
+        previewTickets = previewTickets.filter((t) => t.playerId !== playerId);
+        owned = [];
+        for (let i = 0; i < want; i++) {
+          const rows = buildGrid(game.drawn);
+          rows.forEach((r) => { if (r.complete) r.awarded = true; });
+          const pv = {
+            playerId, code: i === 0 ? 'PREVIEW' : 'PREVIEW-' + (i + 1),
+            name: 'XEM TRƯỚC', locked: false, socketId: socket.id,
+            rows, won: false, previewKinhCount: 0,
+          };
+          previewTickets.push(pv);
+          owned.push(pv);
+        }
       }
-      pv.socketId = socket.id;
-      socket.emit('ticket:assigned', previewPayload(pv));
+      owned.forEach((t) => { t.socketId = socket.id; });
+      socket.emit('ticket:assigned', previewMultiPayload(playerId, owned[0] && owned[0].code));
       return;
     }
 
@@ -513,13 +638,14 @@ io.on('connection', (socket) => {
   // Đổi sang một vé random khác (chưa ai giữ)
   socket.on('ticket:change', (payload) => {
     const playerId = payload && payload.playerId;
-    const pv = previewTickets.find((t) => t.playerId === playerId);
-    if (pv) {
+    const pvList = previewTickets.filter((t) => t.playerId === playerId);
+    if (pvList.length) {
+      const pv = pvList.find((t) => t.code === payload.code) || pvList[0];
       pv.rows = buildGrid(game.drawn);
       pv.rows.forEach((r) => { if (r.complete) r.awarded = true; });
       pv.won = false;
       pv.previewKinhCount = 0;
-      socket.emit('ticket:assigned', previewPayload(pv));
+      socket.emit('ticket:assigned', previewMultiPayload(playerId, pv.code));
       socket.emit('ticket:changed', { code: pv.code });
       return;
     }
@@ -546,8 +672,12 @@ io.on('connection', (socket) => {
 
   // Chốt vé -> xuất hiện trong danh sách người chơi trên màn hình chính
   socket.on('ticket:lock', (payload) => {
-    if (previewTickets.some((t) => t.playerId === payload.playerId)) {
-      socket.emit('ticket:locked', { code: 'PREVIEW', name: 'XEM TRƯỚC' });
+    const pvOwned = previewTickets.filter((t) => t.playerId === payload.playerId);
+    if (pvOwned.length) {
+      pvOwned.forEach((t) => { t.locked = true; });
+      socket.emit('ticket:locked', {
+        code: pvOwned[0].code, name: 'XEM TRƯỚC', codes: pvOwned.map((t) => t.code),
+      });
       return;
     }
     const owned = findTickets(payload && payload.playerId);
@@ -594,6 +724,7 @@ app.get('/api/state', (req, res) => {
     issued: game.tickets.filter((t) => t.owner).length,
     waitingCount: countWaiting(),
     players: lockedPlayers(), winners: game.winners,
+    prize: prizePool(), prizePerWinner: prizePerWinner(),
     history: readJSON(HISTORY_FILE, []),
   });
 });
@@ -607,6 +738,6 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('  LÔ TÔ TẾT - Máy chủ đã sẵn sàng');
   console.log(`  Màn hình chính: http://localhost:${PORT}`);
   console.log(`  Người chơi quét QR: ${buildJoinUrl()}`);
-  console.log(`  Vé 9x9 · ${game.config.maxPlayers} vé · giải ${game.config.prize.toLocaleString('vi-VN')}d`);
+  console.log(`  Vé 9x9 · ${game.config.maxPlayers} vé · cược ${game.config.betPerTicket.toLocaleString('vi-VN')}đ/vé`);
   console.log('================================================');
 });

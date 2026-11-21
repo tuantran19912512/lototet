@@ -1,0 +1,20 @@
+========================================
+  XỔ LÔ TÔ TẾT - CÀI ĐẶT NHANH (3 BƯỚC)
+========================================
+1) Cai Node.js LTS: https://nodejs.org (neu chua co).
+2) Giai nen thu muc lototet, vi du E:\Tools_Vip\Tools\lototet
+3) Double-click "Chay-May-Chu.cmd" -> tu npm install lan dau -> chay server.
+
+- Trang quan ly: http://localhost:3000
+  + Dat so ve, muc cuoc/ve, thoi gian quay tay va quay tu dong.
+  + Tong tien giai TU DONG = so ve da ban x muc cuoc.
+  + "XỔ SỐ NGAY": quay 1 so. "TỰ XỔ ĐẾN KHI CÓ KINH": tu chay, tu dung khi co kinh,
+    hien bang tong ket tien thang/thua + nut "Quay tiep luot moi".
+  + "Xem trước ĐT": doi so vé 1-4 ngay trong khung.
+  + "Man hinh TV": http://<IP-may>:3000/tv.html (F11).
+
+LUU Y
+- Firewall hoi lan dau -> chon Allow / Mang rieng.
+- Muon giu lich su: copy them thu muc "data" tu may cu.
+- QR sai IP: sua ham getLocalIP() trong server.js.
+- Trung cong 3000: "set PORT=8080 && npm start".
