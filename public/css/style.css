@@ -262,6 +262,78 @@ body::before {
   padding: 20px;
   box-shadow: 0 24px 70px rgba(0,0,0,.6);
 }
+.tv-choose-box {
+  width: min(680px, 94vw);
+  background: rgba(74,16,8,.97);
+  border: 2px solid var(--gold);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.6);
+}
+.tv-choose-box h2 {
+  font-family: 'Baloo 2', sans-serif; text-align: center;
+  font-size: 28px; color: var(--gold);
+}
+.tv-choose-sub { text-align: center; color: #ffd9a0; font-size: 13px; margin: 4px 0 16px; }
+.tv-choose-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .tv-choose-grid { grid-template-columns: 1fr; } }
+.tv-opt {
+  background: rgba(255,212,94,.08);
+  border: 2px solid rgba(255,212,94,.35);
+  border-radius: 14px;
+  padding: 18px 12px;
+  cursor: pointer;
+  color: var(--cream);
+  text-align: center;
+  transition: .15s ease;
+}
+.tv-opt:hover { border-color: var(--gold); background: rgba(255,212,94,.16); transform: translateY(-2px); }
+.tv-opt-icon { font-size: 36px; }
+.tv-opt-title { font-family: 'Baloo 2', sans-serif; font-size: 18px; color: var(--gold); font-weight: 800; margin: 6px 0; }
+.tv-opt-desc { font-size: 12px; color: #ffd9a0; line-height: 1.4; }
+.os-tabs { display: flex; gap: 8px; margin: 12px 0 10px; }
+.os-tab {
+  flex: 1; padding: 9px; border-radius: 9px; cursor: pointer;
+  font-size: 13px; font-weight: 800;
+  background: rgba(0,0,0,.25); color: #ffd9a0;
+  border: 1px solid rgba(255,212,94,.35);
+}
+.os-tab.active { background: var(--gold); color: #5a0a0a; }
+.os-guide { display: flex; flex-direction: column; gap: 8px; }
+.os-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: rgba(0,0,0,.25); border-radius: 9px; padding: 9px 11px;
+  font-size: 13px; color: #ffe6b0; line-height: 1.5;
+}
+.os-step .step-num {
+  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--gold); color: #5a0a0a;
+  display: flex; align-items: center; justify-content: center;
+}
+.os-step kbd {
+  background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35);
+  border-radius: 4px; padding: 1px 5px; font-size: 12px; font-family: inherit;
+}
+.os-note {
+  margin-top: 10px; font-size: 12px; color: #ffcf8a;
+  background: rgba(255,159,28,.15); border: 1px dashed #ff9f1c;
+  border-radius: 9px; padding: 9px 11px; line-height: 1.5;
+}
+
+.tv-scan-head { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 6px; color: #ffd9a0; font-size: 13px; }
+.tv-scan-info { font-size: 12px; color: #e8b98a; margin-bottom: 8px; }
+.tv-device-list { display: flex; flex-direction: column; gap: 8px; max-height: 38vh; overflow-y: auto; }
+.tv-device-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(0,0,0,.28); border: 1px solid rgba(255,212,94,.3);
+}
+.tv-device-item .d-icon { font-size: 24px; }
+.tv-device-item .d-info { flex: 1; }
+.tv-device-item .d-info b { color: #fff; font-size: 14px; }
+.tv-device-item .d-info small { display: block; color: #e8b98a; font-size: 11px; }
+.tv-device-item .btn { padding: 8px 12px; font-size: 12px; }
+
 .congrats-box {
   width: min(640px, 94vw);
   text-align: center;
@@ -693,3 +765,36 @@ body::before {
   80% { transform: translate(4px, 4px); }
 }
 .shake { animation: shake .5s ease 3; }
+
+/* ============================================================
+   TRANG ADMIN TRÊN ĐIỆN THOẠI (màn hình nhỏ)
+   ============================================================ */
+@media (max-width: 640px) {
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .brand .logo { font-size: 28px; }
+  .brand h1 { font-size: 20px; }
+  .brand p { font-size: 11px; }
+  .badges { width: 100%; gap: 6px; }
+  .badge { font-size: 11px; padding: 6px 10px; }
+
+  .stage-hero { padding: 12px 12px 0; }
+  .stage { padding: 16px 8px 14px; }
+  .stage-label { font-size: 12px; }
+  .big-number { font-size: clamp(92px, 30vw, 150px); letter-spacing: 2px; }
+  .stage-status { font-size: 12px; }
+
+  .controls { gap: 8px; }
+  .btn { font-size: 14px; padding: 12px; }
+  .btn-primary { font-size: 18px; padding: 16px; }
+  .config-grid { grid-template-columns: 1fr !important; }
+  .panel { padding: 14px; }
+  .panel h2 { font-size: 16px; }
+
+  .tv-choose-box, .congrats-box, .result-box { padding: 14px; }
+  .tv-choose-box h2 { font-size: 22px; }
+  .congrats-box h2 { font-size: 38px; }
+  .result-box h2 { font-size: 24px; }
+  .os-step { font-size: 12px; }
+  .tv-device-item { flex-wrap: wrap; }
+  .tv-device-item .btn { width: 100%; }
+}

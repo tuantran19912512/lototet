@@ -138,6 +138,25 @@ body.tv-body {
 .tv-winner-info { font-size: clamp(11px, 1.1vw, 19px); color: #ffe6b0; }
 .tv-winner-money { font-size: clamp(14px, 1.5vw, 26px); font-weight: 800; color: var(--gold); }
 
+.tv-device {
+  position: absolute; top: 2vh; left: 2.5vw; z-index: 4;
+  font-size: clamp(10px, .9vw, 15px); color: #ffe6b0;
+  background: rgba(0,0,0,.3); border: 1px solid rgba(255,212,94,.4);
+  border-radius: 999px; padding: 4px 10px;
+}
+.tv-device button {
+  background: none; border: none; color: var(--gold); cursor: pointer;
+  font-size: 1em; margin-left: 4px;
+}
+.tv-cast-badge {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  z-index: 5; background: var(--gold); color: #5a0a0a;
+  font-family: 'Baloo 2', sans-serif; font-weight: 800;
+  font-size: clamp(18px, 2.5vw, 40px);
+  padding: 16px 30px; border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.5);
+}
+
 .tv-qr {
   position: absolute; top: 2vh; right: 2.5vw; z-index: 3;
   background: var(--cream); border: 2px solid var(--gold);

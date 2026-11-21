@@ -135,10 +135,29 @@ function applyState(s) {
   }
 }
 
+/* ---------------- Đăng ký làm màn hình TV ---------------- */
+let tvName = localStorage.getItem('loto_tv_name') || '';
+if (!tvName) {
+  tvName = 'TV-' + Math.floor(100 + Math.random() * 900);
+  localStorage.setItem('loto_tv_name', tvName);
+}
+$('tvDeviceName').textContent = tvName;
+
+$('btnTvRename').addEventListener('click', () => {
+  const next = (prompt('Tên màn hình TV:', tvName) || '').trim().slice(0, 40);
+  if (next) {
+    tvName = next;
+    localStorage.setItem('loto_tv_name', tvName);
+    $('tvDeviceName').textContent = tvName;
+    socket.emit('tv:register', { name: tvName });
+  }
+});
+
 /* ---------------- Socket ---------------- */
 socket.on('connect', () => {
   setStatus('Đã kết nối · Chờ lượt xổ');
   socket.emit('host:register');
+  socket.emit('tv:register', { name: tvName });
 });
 socket.on('disconnect', () => setStatus('Mất kết nối – đang thử lại…'));
 socket.on('connect_error', () => setStatus('Không kết nối được máy chủ'));
@@ -146,6 +165,18 @@ socket.on('connect_error', () => setStatus('Không kết nối được máy ch�
 socket.on('host:state', applyState);
 socket.on('qr:ready', ({ dataUrl }) => {
   if (dataUrl) $('tvQrImg').src = dataUrl;
+});
+socket.on('tv:registered', ({ name }) => {
+  $('tvDeviceName').textContent = name;
+});
+socket.on('tv:focus-on', ({ from }) => {
+  setStatus(`📺 Đang nhận xuất từ ${from}…`);
+  const badge = $('tvCastBadge');
+  if (badge) badge.classList.remove('hidden');
+  if (document.body.requestFullscreen && !document.fullscreenElement) {
+    document.body.requestFullscreen().catch(() => {});
+  }
+  setTimeout(() => { if (badge) badge.classList.add('hidden'); }, 5000);
 });
 
 socket.on('draw:rolling', ({ duration, min, max }) => startRoll(duration, min, max));

@@ -235,7 +235,8 @@ socket.on('host:state', (s) => {
   if (state.config) {
     $('cfgMaxPlayers').value = state.config.maxPlayers;
     $('cfgRoll').value = state.config.rollSeconds || 6;
-    $('cfgAutoRoll').value = state.config.autoRollSeconds || 2;
+    $('cfgAutoRoll').value = state.config.autoRollSeconds || 1.2;
+    $('cfgAutoHold').value = state.config.autoHoldMs || 900;
     $('cfgBet').value = state.config.betPerTicket;
   }
   $('cfgPrize').textContent = fmt(state.prize);
@@ -316,18 +317,115 @@ $('cfgRoll').addEventListener('change', () => {
 $('cfgAutoRoll').addEventListener('change', () => {
   socket.emit('settings:update', { autoRollSeconds: $('cfgAutoRoll').value });
 });
+$('cfgAutoHold').addEventListener('change', () => {
+  socket.emit('settings:update', { autoHoldMs: $('cfgAutoHold').value });
+});
 
 $('btnApplyConfig').addEventListener('click', () => {
   socket.emit('config:update', {
     maxPlayers: $('cfgMaxPlayers').value,
     rollSeconds: $('cfgRoll').value,
     autoRollSeconds: $('cfgAutoRoll').value,
+    autoHoldMs: $('cfgAutoHold').value,
     betPerTicket: $('cfgBet').value,
   });
 });
 
 $('btnNew').addEventListener('click', () => socket.emit('game:new'));
-$('btnTV').addEventListener('click', () => window.open('/tv.html', '_blank'));
+/* ---------------------- Chọn cách xuất ra TV ---------------------- */
+function closeTvModal() { $('tvModal').classList.remove('show'); }
+function isMac() { return /Mac|iPod|iPhone|iPad/.test(navigator.platform || '') || /Mac/.test(navigator.userAgent || ''); }
+
+$('btnTV').addEventListener('click', () => {
+  $('tvModal').classList.add('show');
+  $('tvScanPanel').classList.add('hidden');
+  $('tvMirrorPanel').classList.add('hidden');
+  document.querySelectorAll('.os-tab').forEach((t) => t.classList.toggle('active', (t.dataset.os === 'mac') === isMac()));
+  $('osWin').classList.toggle('hidden', isMac());
+  $('osMac').classList.toggle('hidden', !isMac());
+});
+$('btnCloseTvModal').addEventListener('click', closeTvModal);
+$('tvModal').addEventListener('click', (e) => { if (e.target === $('tvModal')) closeTvModal(); });
+
+// 1) Cáp HDMI: mở màn hình TV ngay máy này, full màn hình
+$('tvOptCable').addEventListener('click', () => {
+  closeTvModal();
+  const w = window.open('/tv.html', '_blank');
+  toast('🔌 Đã mở màn hình TV. Cắm cáp HDMI và nhấn F11 để full màn hình.');
+  if (w) w.focus();
+});
+
+// 3) Chiếu màn hình: mở hướng dẫn theo OS + mở màn hình TV
+$('tvOptMirror').addEventListener('click', () => {
+  $('tvScanPanel').classList.add('hidden');
+  $('tvMirrorPanel').classList.remove('hidden');
+});
+document.querySelectorAll('.os-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.os-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    $('osWin').classList.toggle('hidden', tab.dataset.os !== 'win');
+    $('osMac').classList.toggle('hidden', tab.dataset.os !== 'mac');
+  });
+});
+$('btnOpenTvFull').addEventListener('click', () => {
+  closeTvModal();
+  const w = window.open('/tv.html', '_blank');
+  toast('📺 Đã mở màn hình TV. Nhấn F11 (Mac: ⌃⌘F) để full màn hình.');
+  if (w) w.focus();
+});
+
+// 2) WiFi/LAN: tự dò TV trong mạng
+async function scanTvDevices() {
+  $('tvMirrorPanel').classList.add('hidden');
+  $('tvScanPanel').classList.remove('hidden');
+  $('tvScanInfo').textContent = 'Đang quét mạng… (có thể mất vài giây)';
+  $('tvDeviceList').innerHTML = '<div class="empty">🔍 Đang dò…</div>';
+  try {
+    const r = await fetch('/api/tv-discover');
+    const data = await r.json();
+    const list = data.devices || [];
+    $('tvScanInfo').textContent = `Mạng ${data.subnet || '?'} · máy chủ ${data.localIp || '?'} · tìm thấy ${list.length} thiết bị`;
+    if (!list.length) {
+      $('tvDeviceList').innerHTML = '<div class="empty">Không tìm thấy TV. Hãy mở trang /tv.html trên TV (cùng Wi-Fi) rồi bấm Dò lại.</div>';
+      return;
+    }
+    $('tvDeviceList').innerHTML = list.map((d) => {
+      const isSocket = !!d.socketId;
+      const src = isSocket ? 'Đang hiển thị · cùng mạng' :
+        (d.source === 'scan' ? 'Phát hiện qua mạng' : 'Trong mạng');
+      const name = d.name || d.probeName || ('TV-' + d.ip.split('.').pop());
+      return `<div class="tv-device-item">
+        <div class="d-icon">📺</div>
+        <div class="d-info"><b>${escapeHtml(name)}</b><small>${d.ip} · ${src}</small></div>
+        ${isSocket
+          ? `<button class="btn btn-primary" data-socket="${d.socketId}" data-name="${escapeHtml(name)}">XUẤT SANG TV NÀY</button>`
+          : `<button class="btn btn-ghost" data-open="${d.ip}">MỞ TRANG TV</button>`}
+      </div>`;
+    }).join('');
+
+    $('tvDeviceList').querySelectorAll('[data-socket]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        socket.emit('tv:focus', { socketId: btn.dataset.socket });
+      });
+    });
+    $('tvDeviceList').querySelectorAll('[data-open]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        window.open(`http://${btn.dataset.open}:${location.port}/tv.html`, '_blank');
+      });
+    });
+  } catch (e) {
+    $('tvScanInfo').textContent = 'Lỗi khi dò TV: ' + e.message;
+    $('tvDeviceList').innerHTML = '';
+  }
+}
+$('tvOptWifi').addEventListener('click', scanTvDevices);
+$('btnTvRescan').addEventListener('click', scanTvDevices);
+socket.on('tv:focus-ok', ({ name }) => {
+  toast(`📺 Đã xuất sang ${name}!`);
+  closeTvModal();
+});
+socket.on('tv:focus-error', ({ message }) => toast(message));
 $('btnFinish').addEventListener('click', () => socket.emit('game:finish'));
 
 /* ---------------------- Tự xổ đến khi có KINH ---------------------- */

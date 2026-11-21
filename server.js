@@ -111,7 +111,8 @@ function freshGame(config) {
     maxPlayers: 200,
     betPerTicket: 5000,
     rollSeconds: 6,
-    autoRollSeconds: 2,
+    autoRollSeconds: 1.2,
+    autoHoldMs: 900,
     minNumber: 1,
     maxNumber: 90,
   }, config || {});
@@ -148,7 +149,7 @@ let game = readJSON(STATE_FILE, null);
 if (!game || !game.config || !Array.isArray(game.drawn) || !Array.isArray(game.tickets)) {
   game = freshGame();
 }
-game.config = Object.assign({ maxPlayers: 200, betPerTicket: 5000, rollSeconds: 6, autoRollSeconds: 2, minNumber: 1, maxNumber: 90 }, game.config || {});
+game.config = Object.assign({ maxPlayers: 200, betPerTicket: 5000, rollSeconds: 6, autoRollSeconds: 1.2, autoHoldMs: 900, minNumber: 1, maxNumber: 90 }, game.config || {});
 
 // Đang trong lượt quay số (chưa chốt kết quả)
 let rolling = false;
@@ -270,8 +271,99 @@ function emitHostState() {
   });
 }
 
+/* ---------------- Quản lý màn hình TV + dò mạng LAN ---------------- */
+const tvClients = new Map();   // socketId -> { id, name, ip, connectedAt }
+
+function normIp(addr) {
+  return String(addr || '').replace(/^::ffff:/, '');
+}
+function getLocalIPv4() {
+  const ifaces = os.networkInterfaces();
+  for (const name of Object.keys(ifaces)) {
+    for (const iface of ifaces[name] || []) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return { ip: iface.address, netmask: iface.netmask || '255.255.255.0' };
+      }
+    }
+  }
+  return { ip: getLocalIP(), netmask: '255.255.255.0' };
+}
+
+// Quét subnet /24: gọi /api/tv-info trên từng IP, tìm thiết bị đang chạy app này
+function scanLan() {
+  return new Promise((resolve) => {
+    const { ip: localIp } = getLocalIPv4();
+    const parts = localIp.split('.');
+    const base = parts.slice(0, 3).join('.');
+    const found = [];
+    let index = 1;
+    let done = false;
+    const CONCURRENCY = 40;
+    const inFlight = { n: 0 };
+
+    function probe(host) {
+      return new Promise((res) => {
+        const req = http.get(`http://${host}:${PORT}/api/tv-info`, { timeout: 700 }, (r) => {
+          let body = '';
+          r.on('data', (c) => { body += c; if (body.length > 2000) r.destroy(); });
+          r.on('end', () => {
+            try {
+              const j = JSON.parse(body);
+              if (j && j.app === 'lototet') res({ ip: host, name: j.name || '', version: j.version || '' });
+              else res(null);
+            } catch (e) { res(null); }
+          });
+        });
+        req.on('error', () => res(null));
+        req.on('timeout', () => { req.destroy(); res(null); });
+      });
+    }
+
+    function worker() {
+      if (index > 254) {
+        if (--inFlight.n === 0) finish();
+        return;
+      }
+      const host = `${base}.${index++}`;
+      probe(host).then((r) => {
+        if (r && host !== localIp) found.push(r);
+        worker();
+      });
+    }
+    function finish() {
+      if (done) return;
+      done = true;
+      const registered = [...tvClients.values()];
+      const merged = new Map();
+      registered.forEach((t) => merged.set(t.ip, {
+        ip: t.ip, name: t.name, online: true,
+        source: 'socket', socketId: t.id,
+      }));
+      found.forEach((t) => {
+        const cur = merged.get(t.ip);
+        if (cur) { cur.online = true; cur.source = 'both'; cur.probeName = t.name; }
+        else merged.set(t.ip, { ip: t.ip, name: t.name || '', online: true, source: 'scan' });
+      });
+      resolve({
+        localIp,
+        subnet: base + '.0/24',
+        devices: [...merged.values()].sort((a, b) => a.ip.localeCompare(b.ip)),
+      });
+    }
+    for (let i = 0; i < CONCURRENCY; i++) { inFlight.n++; worker(); }
+    // đảm bảo kết thúc dù có probe treo
+    setTimeout(finish, 8000);
+  });
+}
+
 /* ---------------- QR ---------------- */
-function buildJoinUrl() { return `http://${getLocalIP()}:${PORT}/play.html`; }
+// Nếu đặt PUBLIC_URL (https://xxx.trycloudflare.com) thì QR dùng domain public,
+// ngược lại dùng IP LAN như bình thường.
+function buildJoinUrl() {
+  const pub = String(process.env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
+  if (pub) return `${pub}/play.html`;
+  return `http://${getLocalIP()}:${PORT}/play.html`;
+}
 function sendQR(target) {
   const joinUrl = buildJoinUrl();
   QRCode.toDataURL(joinUrl, {
@@ -493,7 +585,8 @@ function nextAutoDraw() {
     io.emit('auto:state', { running: false });
     return;
   }
-  const autoMs = Math.max(300, Math.min(20000, (Number(game.config.autoRollSeconds) || 2) * 1000));
+  const autoMs = Math.max(300, Math.min(20000, (Number(game.config.autoRollSeconds) || 1.2) * 1000));
+  const holdMs = Math.max(200, Math.min(5000, Number(game.config.autoHoldMs) || 900));
   doDraw(undefined, () => {
     if (!autoRunning) return;
     if (game.winners.length > roundStartWinners) {
@@ -502,7 +595,7 @@ function nextAutoDraw() {
       io.emit('auto:state', { running: false });
       io.emit('auto:stopped', buildRoundSummary());
     } else {
-      setTimeout(nextAutoDraw, 400);
+      setTimeout(nextAutoDraw, holdMs);   // giữ số đủ lâu cho người xem đọc
     }
   }, autoMs);
 }
@@ -511,6 +604,38 @@ function nextAutoDraw() {
 io.on('connection', (socket) => {
   socket.on('host:register', () => { emitHostState(); sendQR(socket.id); });
 
+  // Màn hình TV đăng ký để主机 biết đang có TV nào hiển thị
+  socket.on('tv:register', (payload) => {
+    const ip = normIp(socket.handshake.address);
+    tvClients.set(socket.id, {
+      id: socket.id,
+      name: String((payload && payload.name) || `TV-${ip.split('.').pop() || '??'}`).slice(0, 40),
+      ip,
+      connectedAt: Date.now(),
+    });
+    socket.emit('tv:registered', { ip, name: tvClients.get(socket.id).name });
+    io.emit('tv:clients', [...tvClients.values()]);
+  });
+
+  // Chọn TV để xuất: bật fullscreen + hiện banner trên TV đó
+  socket.on('tv:focus', (payload) => {
+    const targetId = payload && payload.socketId;
+    const target = tvClients.get(targetId);
+    if (!target) {
+      socket.emit('tv:focus-error', { message: 'TV này đã ngắt kết nối, hãy dò lại.' });
+      return;
+    }
+    io.to(targetId).emit('tv:focus-on', { from: normIp(socket.handshake.address) });
+    socket.emit('tv:focus-ok', { name: target.name, ip: target.ip });
+  });
+
+  socket.on('disconnect', () => {
+    if (tvClients.has(socket.id)) {
+      tvClients.delete(socket.id);
+      io.emit('tv:clients', [...tvClients.values()]);
+    }
+  });
+
   // Chỉ đổi thời gian quay, không làm mất ván đang chơi
   socket.on('settings:update', (s) => {
     if (!s) return;
@@ -518,7 +643,10 @@ io.on('connection', (socket) => {
       game.config.rollSeconds = Math.max(2, Math.min(15, Number(s.rollSeconds) || 6));
     }
     if (s.autoRollSeconds !== undefined) {
-      game.config.autoRollSeconds = Math.max(0.3, Math.min(15, Number(s.autoRollSeconds) || 2));
+      game.config.autoRollSeconds = Math.max(0.5, Math.min(15, Number(s.autoRollSeconds) || 1.2));
+    }
+    if (s.autoHoldMs !== undefined) {
+      game.config.autoHoldMs = Math.max(200, Math.min(5000, Number(s.autoHoldMs) || 900));
     }
     persistState();
     emitHostState();
@@ -527,14 +655,15 @@ io.on('connection', (socket) => {
   socket.on('config:update', (cfg) => {
     const maxPlayers = Math.max(1, Math.min(1000, Number(cfg.maxPlayers) || 200));
     const rollSeconds = Math.max(2, Math.min(15, Number(cfg.rollSeconds) || game.config.rollSeconds || 6));
-    const autoRollSeconds = Math.max(0.3, Math.min(15, Number(cfg.autoRollSeconds) || game.config.autoRollSeconds || 2));
+    const autoRollSeconds = Math.max(0.5, Math.min(15, Number(cfg.autoRollSeconds) || game.config.autoRollSeconds || 1.2));
+    const autoHoldMs = Math.max(200, Math.min(5000, Number(cfg.autoHoldMs) || game.config.autoHoldMs || 900));
     const betPerTicket = Math.max(0, Number(cfg.betPerTicket) || 5000);
     rolling = false;
     autoRunning = false;
     roundClosed = false;
     previewTickets = [];
     io.emit('draw:cancel');
-    game = freshGame({ maxPlayers, rollSeconds, autoRollSeconds, betPerTicket });
+    game = freshGame({ maxPlayers, rollSeconds, autoRollSeconds, autoHoldMs, betPerTicket });
     persistState();
     io.emit('game:reset', { config: game.config });
     emitHostState();
@@ -729,6 +858,22 @@ io.on('connection', (socket) => {
 
 /* ---------------- Static ---------------- */
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Định danh để các máy trong LAN dò tìm
+app.get('/api/tv-info', (req, res) => {
+  res.json({
+    app: 'lototet',
+    version: '1.0',
+    name: (req.query.name || '').toString().slice(0, 40),
+  });
+});
+
+// Dò các thiết bị đang chạy app trong cùng mạng
+app.get('/api/tv-discover', async (req, res) => {
+  try { res.json(await scanLan()); }
+  catch (e) { res.json({ localIp: getLocalIP(), subnet: '', devices: [], error: e.message }); }
+});
+
 app.get('/api/state', (req, res) => {
   res.json({
     serverTime: Date.now(), joinUrl: buildJoinUrl(),
@@ -751,6 +896,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('  LÔ TÔ TẾT - Máy chủ đã sẵn sàng');
   console.log(`  Màn hình chính: http://localhost:${PORT}`);
   console.log(`  Người chơi quét QR: ${buildJoinUrl()}`);
+  if (process.env.PUBLIC_URL) console.log(`  🌐 Chế độ PUBLIC (Cloudflare tunnel) đang bật`);
   console.log(`  Vé 9x9 · ${game.config.maxPlayers} vé · cược ${game.config.betPerTicket.toLocaleString('vi-VN')}đ/vé`);
   console.log('================================================');
 });

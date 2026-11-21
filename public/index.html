@@ -59,8 +59,13 @@
             </div>
             <div class="field">
               <label>Quay tự động (giây)</label>
-              <input id="cfgAutoRoll" type="number" min="0.3" max="15" step="0.1" value="2" />
-              <div class="hint">Nhanh hơn lượt xổ tay · chỉ dùng khi Tự xổ</div>
+              <input id="cfgAutoRoll" type="number" min="0.5" max="15" step="0.1" value="1.2" />
+              <div class="hint">Thời gian quay mỗi số khi Tự xổ</div>
+            </div>
+            <div class="field">
+              <label>Giữ số sau khi dừng (ms)</label>
+              <input id="cfgAutoHold" type="number" min="200" max="5000" step="100" value="900" />
+              <div class="hint">Số dừng lại hiện bao lâu trước khi sang số mới</div>
             </div>
             <div class="field">
               <label>Mức cược mỗi vé (VNĐ)</label>
@@ -74,7 +79,7 @@
         <div class="btn-row">
           <button id="btnNew" class="btn btn-ghost">🔄 Ván mới</button>
           <button id="btnPreview" class="btn btn-ghost">📱 Xem trước ĐT</button>
-          <button id="btnTV" class="btn btn-ghost">📺 Màn hình TV</button>
+          <button id="btnTV" class="btn btn-ghost">📺 Xuất ra TV</button>
           <button id="btnFinish" class="btn btn-danger">🏁 Kết thúc & Lưu</button>
         </div>
 
@@ -122,6 +127,65 @@
           <div id="tabAcks" class="history-list hidden"></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal chọn cách xuất ra TV -->
+  <div id="tvModal" class="preview-modal">
+    <div class="tv-choose-box">
+      <h2>📺 XUẤT RA MÀN HÌNH</h2>
+      <p class="tv-choose-sub">Chọn cách chiếu số xổ và người kinh</p>
+      <div class="tv-choose-grid">
+        <button id="tvOptCable" class="tv-opt">
+          <div class="tv-opt-icon">🔌</div>
+          <div class="tv-opt-title">Cáp HDMI</div>
+          <div class="tv-opt-desc">Cắm cáp trực tiếp từ máy ra TV</div>
+        </button>
+        <button id="tvOptWifi" class="tv-opt">
+          <div class="tv-opt-icon">📶</div>
+          <div class="tv-opt-title">WiFi / mạng nội bộ</div>
+          <div class="tv-opt-desc">Tự dò TV đang cùng mạng</div>
+        </button>
+        <button id="tvOptMirror" class="tv-opt">
+          <div class="tv-opt-icon">🪞</div>
+          <div class="tv-opt-title">Chiếu màn hình</div>
+          <div class="tv-opt-desc">Miracast (Windows) / AirPlay (Mac)</div>
+        </button>
+      </div>
+
+      <!-- Hướng dẫn chiếu toàn màn hình theo hệ điều hành -->
+      <div id="tvMirrorPanel" class="hidden">
+        <div class="tv-scan-head"><b>🪞 Chiếu toàn màn hình (hệ điều hành)</b></div>
+        <div class="os-tabs">
+          <button class="os-tab active" data-os="win">🪟 Windows</button>
+          <button class="os-tab" data-os="mac">🍎 Mac</button>
+        </div>
+        <div id="osWin" class="os-guide">
+          <div class="os-step"><b class="step-num">1</b><span>Bấm <kbd>Win</kbd> + <kbd>K</kbd> (hoặc mở Settings → System → Screen → <b>Connect to a wireless display</b>).</span></div>
+          <div class="os-step"><b class="step-num">2</b><span>Chọn tên TV/Miracast trong danh sách hiện ra.</span></div>
+          <div class="os-step"><b class="step-num">3</b><span>Trở lại trang này, bấm nút <b>📺 Mở màn hình TV</b> bên dưới để TV hiện số.</span></div>
+          <div class="os-step"><b class="step-num">4</b><span>Nhấn <kbd>F11</kbd> để full màn hình. Muốn ngừng chiếu: mở lại Win+K → Disconnect.</span></div>
+        </div>
+        <div id="osMac" class="os-guide hidden">
+          <div class="os-step"><b class="step-num">1</b><span>Bấm biểu tượng <b>Control Center</b> (góc phải thanh menu) → chọn <b>Screen Mirroring</b>.</span></div>
+          <div class="os-step"><b class="step-num">2</b><span>Chọn tên Apple TV / TV hỗ trợ AirPlay trong danh sách.</span></div>
+          <div class="os-step"><b class="step-num">3</b><span>Trở lại trang này, bấm nút <b>📺 Mở màn hình TV</b> bên dưới để TV hiện số.</span></div>
+          <div class="os-step"><b class="step-num">4</b><span>Nhấn <kbd>⌃</kbd>+<kbd>⌘</kbd>+<kbd>F</kbd> để full màn hình. Ngừng chiếu: Control Center → Screen Mirroring → Stop Mirroring.</span></div>
+        </div>
+        <div class="os-note">💡 Cách này chiếu <b>toàn bộ màn hình máy</b> (cả trang quản lý). Muốn đẹp hơn dùng <b>WiFi / mạng nội bộ</b> để chỉ gửi số + người kinh lên TV.</div>
+        <button id="btnOpenTvFull" class="btn btn-primary" style="width:100%;margin-top:8px">📺 MỞ MÀN HÌNH TV (F11)</button>
+      </div>
+
+      <div id="tvScanPanel" class="hidden">
+        <div class="tv-scan-head">
+          <b>🔍 Các TV tìm thấy trong mạng</b>
+          <button id="btnTvRescan" class="btn btn-ghost" style="padding:6px 12px;font-size:12px">Dò lại</button>
+        </div>
+        <div id="tvScanInfo" class="tv-scan-info"></div>
+        <div id="tvDeviceList" class="tv-device-list"></div>
+      </div>
+
+      <button id="btnCloseTvModal" class="btn btn-ghost" style="width:100%;margin-top:14px">ĐÓNG</button>
     </div>
   </div>
 
