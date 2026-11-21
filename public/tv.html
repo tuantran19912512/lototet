@@ -10,6 +10,14 @@
 <body class="tv-body">
   <div class="tv-app">
     <div id="tvCastBadge" class="tv-cast-badge hidden">📺 ĐANG NHẬN XUẤT TỪ MÁY CHỦ</div>
+
+    <section class="tv-left">
+      <div class="tv-left-title">👥 NGƯỜI THAM GIA</div>
+      <div id="tvLeftList" class="tv-left-list">
+        <div class="tv-left-empty">Chưa có người chơi</div>
+      </div>
+    </section>
+
     <div class="tv-device">
       <span>🖥️ <b id="tvDeviceName">TV</b></span>
       <button id="btnTvRename" title="Đổi tên TV">✏️</button>
@@ -29,8 +37,14 @@
 
     <main class="tv-main">
       <div id="tvNumberWrap" class="tv-number-wrap">
-        <div class="tv-label">SỐ VỪA XỔ</div>
-        <div id="tvNumber" class="tv-number"><span class="tv-placeholder">--</span></div>
+        <div class="tv-label">LỒNG CẦU XỔ SỐ</div>
+        <div class="drum-stage">
+          <div id="drum" class="drum">
+            <div id="drumBalls" class="drum-balls"></div>
+            <div class="drum-shine"></div>
+          </div>
+          <div id="drumBallOut" class="drum-ball-out"><span id="outNumber">--</span></div>
+        </div>
         <div id="tvStatus" class="tv-status">Sẵn sàng · Chờ lượt xổ đầu tiên</div>
       </div>
     </main>
@@ -62,6 +76,7 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/audio.js"></script>
   <script src="/js/tv.js"></script>
 </body>
 </html>

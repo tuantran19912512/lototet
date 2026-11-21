@@ -351,6 +351,11 @@ function renderRows() {
   $('progressBar').style.width = (matched / total * 100) + '%';
 }
 
+/* ---------------- Âm chúc mừng khi KINH ---------------- */
+socket.on('kinh:notify', () => {
+  if (window.LotoAudio) LotoAudio.kinh();
+});
+
 /* ---------------- Đổi tên ---------------- */
 function saveName() {
   const name = $('nameInput').value.trim() || 'Người chơi';

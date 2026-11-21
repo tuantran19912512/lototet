@@ -64,27 +64,102 @@ body.tv-body {
   color: #ffd9a0;
   margin-bottom: .4vh;
 }
-.tv-number {
-  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
-  font-weight: 800;
-  font-size: clamp(100px, 20vw, 300px);
-  line-height: .98;
-  color: var(--gold);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: .04em;
-  text-shadow:
-    0 0 50px rgba(255,212,94,.65),
-    0 10px 0 #b8860b,
-    0 22px 40px rgba(0,0,0,.55);
-  transition: transform .12s ease;
+/* ---------------- LỒNG CẦU QUAY ---------------- */
+.drum-stage {
+  position: relative;
+  width: clamp(220px, 34vh, 400px);
+  height: clamp(220px, 34vh, 400px);
+  margin: 1vh auto;
 }
-.tv-number .tv-placeholder { opacity: .3; }
-.tv-number.spinning { filter: blur(4px); opacity: .9; }
-.tv-number.pop { animation: tvPop .55s cubic-bezier(.2,1.6,.4,1); }
-@keyframes tvPop {
-  0% { transform: scale(.75); }
-  60% { transform: scale(1.12); }
-  100% { transform: scale(1); }
+.drum {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: clamp(6px, .9vw, 12px) solid #e8c25a;
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255,255,255,.18), transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(120,10,15,.75), rgba(60,4,8,.95));
+  box-shadow:
+    inset 0 0 40px rgba(0,0,0,.75),
+    0 0 0 4px rgba(255,212,94,.25),
+    0 18px 50px rgba(0,0,0,.55);
+  overflow: hidden;
+  animation: drumSpin 1.4s linear infinite;
+}
+.drum.spinning { animation-duration: .55s; }
+.drum.slowdown { animation-duration: 2.4s; }
+.drum.stopped { animation-play-state: paused; }
+@keyframes drumSpin { to { transform: rotate(360deg); } }
+
+.drum-balls { position: absolute; inset: 0; }
+.drum-ball {
+  position: absolute;
+  width: clamp(20px, 2.6vh, 34px);
+  height: clamp(20px, 2.6vh, 34px);
+  border-radius: 50%;
+  background: linear-gradient(160deg, #fff8e7, #f5d98f);
+  border: 2px solid #c9971f;
+  color: #7a1010;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: clamp(9px, 1.1vh, 14px);
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 -2px 3px rgba(150,90,10,.4), 0 2px 4px rgba(0,0,0,.4);
+  transform: translate(-50%, -50%);
+  /* Mỗi bi lắc theo hướng/tốc độ riêng -> trông như đang nhảy trong lồng */
+  animation: ballJitter var(--dur, .5s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+@keyframes ballJitter {
+  0%   { transform: translate(calc(-50% - var(--dx, 6px)), calc(-50% - var(--dy, 6px))) rotate(-12deg); }
+  50%  { transform: translate(calc(-50% + var(--dx, 6px)), calc(-50% + var(--dy, 6px))) rotate(10deg); }
+  100% { transform: translate(calc(-50% + var(--dx, 6px)), calc(-50% - var(--dy, 6px))) rotate(-6deg); }
+}
+/* Khi lồng dừng, mọi bi cũng đứng yên */
+.drum.stopped .drum-ball,
+.drum.slowdown .drum-ball { animation-play-state: paused; }
+.drum-ball.picked {
+  background: linear-gradient(160deg, #fff, #ffd45e);
+  box-shadow: 0 0 18px rgba(255,212,94,.95), 0 0 40px rgba(255,212,94,.6);
+  border-color: #fff;
+}
+.drum-shine {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: linear-gradient(125deg, rgba(255,255,255,.22), transparent 42%);
+  pointer-events: none;
+}
+
+/* Trái bi được đẩy ra giữa màn hình */
+.drum-ball-out {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: clamp(120px, 20vh, 220px);
+  height: clamp(120px, 20vh, 220px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #ffd45e 55%, #e8a916);
+  border: clamp(4px, .6vw, 8px) solid #fff;
+  box-shadow:
+    0 0 0 6px rgba(255,212,94,.35),
+    0 0 60px rgba(255,212,94,.8),
+    0 20px 50px rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Baloo 2', sans-serif;
+  font-size: clamp(56px, 10vh, 110px);
+  font-weight: 800;
+  color: #8a0f10;
+  text-shadow: 0 3px 0 rgba(255,255,255,.6);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .7s cubic-bezier(.2,1.5,.4,1), opacity .35s ease;
+}
+.drum-ball-out.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.drum-ball-out.pop { animation: ballPop .6s ease; }
+@keyframes ballPop {
+  0% { transform: translate(-50%, -50%) scale(.7); }
+  60% { transform: translate(-50%, -50%) scale(1.12); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 .tv-status { font-size: clamp(12px, 1.1vw, 20px); color: #ffe6b0; min-height: 1.5em; }
 .tv-bet {
@@ -143,6 +218,36 @@ body.tv-body {
 }
 .tv-winner-info { font-size: clamp(11px, 1.1vw, 19px); color: #ffe6b0; }
 .tv-winner-money { font-size: clamp(14px, 1.5vw, 26px); font-weight: 800; color: var(--gold); }
+
+.tv-left {
+  position: absolute; top: 8vh; left: 2.5vw; z-index: 3;
+  width: clamp(170px, 17vw, 280px);
+  max-height: 72vh;
+  display: flex; flex-direction: column;
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,212,94,.35);
+  border-radius: 12px;
+  padding: 10px 10px 8px;
+}
+.tv-left-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: clamp(12px, 1.1vw, 18px); font-weight: 800;
+  color: var(--gold); text-align: center; margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255,212,94,.3); padding-bottom: 5px;
+}
+.tv-left-list { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
+.tv-left-empty { font-size: clamp(10px, .9vw, 14px); color: #e8b98a; text-align: center; padding: 6px; }
+.tv-left-row {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,212,94,.1);
+  border: 1px solid rgba(255,212,94,.28);
+  border-radius: 8px; padding: 5px 8px;
+  font-size: clamp(11px, 1vw, 16px); color: #fff;
+}
+.tv-left-row.win { border-color: var(--green); background: rgba(31,157,85,.2); }
+.tv-left-row .l-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tv-left-row .l-tickets { color: var(--gold); font-weight: 800; white-space: nowrap; }
+.tv-left-row .l-kinh { color: #7dffa8; font-weight: 800; white-space: nowrap; }
 
 .tv-device {
   position: absolute; top: 2vh; left: 2.5vw; z-index: 4;

@@ -112,7 +112,7 @@ function freshGame(config) {
     betPerTicket: 5000,
     rollSeconds: 6,
     autoRollSeconds: 1.2,
-    autoHoldMs: 900,
+    autoHoldMs: 4000,
     minNumber: 1,
     maxNumber: 90,
   }, config || {});
@@ -149,7 +149,7 @@ let game = readJSON(STATE_FILE, null);
 if (!game || !game.config || !Array.isArray(game.drawn) || !Array.isArray(game.tickets)) {
   game = freshGame();
 }
-game.config = Object.assign({ maxPlayers: 200, betPerTicket: 5000, rollSeconds: 6, autoRollSeconds: 1.2, autoHoldMs: 900, minNumber: 1, maxNumber: 90 }, game.config || {});
+game.config = Object.assign({ maxPlayers: 200, betPerTicket: 5000, rollSeconds: 6, autoRollSeconds: 1.2, autoHoldMs: 4000, minNumber: 1, maxNumber: 90 }, game.config || {});
 
 // Đang trong lượt quay số (chưa chốt kết quả)
 let rolling = false;
@@ -184,9 +184,18 @@ function prizePerWinner() {
   return game.winners.length ? Math.floor(pool / game.winners.length) : pool;
 }
 function lockedPlayers() {
-  return game.tickets
-    .filter((t) => t.locked && t.owner)
-    .map((t) => ({ code: t.code, name: t.name, kinh: t.won ? game.winners.filter((w) => w.playerId === t.owner).length : 0 }));
+  const map = new Map();
+  game.tickets.filter((t) => t.locked && t.owner).forEach((t) => {
+    let p = map.get(t.owner);
+    if (!p) {
+      p = { playerId: t.owner, name: t.name, tickets: 0, codes: [], kinh: 0 };
+      map.set(t.owner, p);
+    }
+    p.tickets++;
+    p.codes.push(t.code);
+    p.kinh += game.winners.filter((w) => w.playerId === t.owner && w.code === t.code).length;
+  });
+  return [...map.values()];
 }
 function rowNumbers(row) { return row.cells.filter(Boolean); }
 function countWaiting() {
@@ -585,7 +594,7 @@ function nextAutoDraw() {
     return;
   }
   const autoMs = Math.max(300, Math.min(20000, (Number(game.config.autoRollSeconds) || 1.2) * 1000));
-  const holdMs = Math.max(200, Math.min(5000, Number(game.config.autoHoldMs) || 900));
+  const holdMs = Math.max(200, Math.min(10000, Number(game.config.autoHoldMs) || 4000));
   doDraw(undefined, () => {
     if (!autoRunning) return;
     if (game.winners.length > roundStartWinners) {
@@ -645,7 +654,7 @@ io.on('connection', (socket) => {
       game.config.autoRollSeconds = Math.max(0.5, Math.min(15, Number(s.autoRollSeconds) || 1.2));
     }
     if (s.autoHoldMs !== undefined) {
-      game.config.autoHoldMs = Math.max(200, Math.min(5000, Number(s.autoHoldMs) || 900));
+      game.config.autoHoldMs = Math.max(200, Math.min(10000, Number(s.autoHoldMs) || 4000));
     }
     persistState();
     emitHostState();
@@ -655,7 +664,7 @@ io.on('connection', (socket) => {
     const maxPlayers = Math.max(1, Math.min(1000, Number(cfg.maxPlayers) || 200));
     const rollSeconds = Math.max(2, Math.min(15, Number(cfg.rollSeconds) || game.config.rollSeconds || 6));
     const autoRollSeconds = Math.max(0.5, Math.min(15, Number(cfg.autoRollSeconds) || game.config.autoRollSeconds || 1.2));
-    const autoHoldMs = Math.max(200, Math.min(5000, Number(cfg.autoHoldMs) || game.config.autoHoldMs || 900));
+    const autoHoldMs = Math.max(200, Math.min(10000, Number(cfg.autoHoldMs) || game.config.autoHoldMs || 4000));
     const betPerTicket = Math.max(0, Number(cfg.betPerTicket) || 5000);
     rolling = false;
     autoRunning = false;

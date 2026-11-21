@@ -237,7 +237,7 @@ socket.on('host:state', (s) => {
     $('cfgMaxPlayers').value = state.config.maxPlayers;
     $('cfgRoll').value = state.config.rollSeconds || 6;
     $('cfgAutoRoll').value = state.config.autoRollSeconds || 1.2;
-    $('cfgAutoHold').value = state.config.autoHoldMs || 900;
+    $('cfgAutoHold').value = state.config.autoHoldMs || 4000;
     $('cfgBet').value = state.config.betPerTicket;
   }
   $('cfgPrize').textContent = fmt(state.prize);
@@ -276,7 +276,7 @@ socket.on('host:kinh', ({ winners, latest }) => {
   latest.forEach((w) => {
     toast(`🎉 ${w.name} KINH hàng ${w.row} (thứ ${w.position})!`);
   });
-  beep('kinh');
+  if (window.LotoAudio) LotoAudio.kinh(); else beep('kinh');
   $('stageStatus').textContent = '🎉 CÓ NGƯỜI KINH! Chúc mừng! 🎉';
 });
 
@@ -485,7 +485,7 @@ function showCongrats(data) {
       <div class="c-money">+ ${fmt(per)}</div>
     </div>`).join('');
   $('congratsModal').classList.add('show');
-  beep('kinh');
+  if (window.LotoAudio) LotoAudio.kinh(); else beep('kinh');
   // Tự mở bảng kết quả sau 6 giây, hoặc bấm nút để mở ngay
   let left = 6;
   $('congratsCount').textContent = `Bảng kết quả sẽ hiện sau ${left}s…`;

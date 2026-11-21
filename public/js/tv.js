@@ -13,42 +13,80 @@ let stateLoaded = false;
 
 function setStatus(t) { $('tvStatus').textContent = t; }
 
-/* ---------------- Hiệu ứng quay ---------------- */
-function startRoll(duration, min, max) {
+/* ---------------- Lồng cầu 90 bi ---------------- */
+const drum = $('drum');
+const drumBalls = $('drumBalls');
+const ballOut = $('drumBallOut');
+const BALLS = [];
+
+function buildDrum() {
+  if (BALLS.length) return;
+  const frag = document.createDocumentFragment();
+  for (let n = 1; n <= 90; n++) {
+    // Phân bố ngẫu nhiên trong hình tròn (bán kính ~42%)
+    const a = Math.random() * Math.PI * 2;
+    const r = Math.sqrt(Math.random()) * 41;
+    const x = 50 + Math.cos(a) * r;
+    const y = 50 + Math.sin(a) * r;
+    const b = document.createElement('div');
+    b.className = 'drum-ball';
+    b.dataset.n = n;
+    b.textContent = n;
+    b.style.left = x + '%';
+    b.style.top = y + '%';
+    // Biến cho chuyển động lắc ngẫu nhiên riêng từng bi
+    b.style.setProperty('--dx', (4 + Math.random() * 9).toFixed(1) + 'px');
+    b.style.setProperty('--dy', (4 + Math.random() * 9).toFixed(1) + 'px');
+    b.style.setProperty('--dur', (0.28 + Math.random() * 0.45).toFixed(2) + 's');
+    b.style.setProperty('--delay', (Math.random() * 0.5).toFixed(2) + 's');
+    frag.appendChild(b);
+    BALLS.push(b);
+  }
+  drumBalls.appendChild(frag);
+}
+buildDrum();
+
+function startRoll(duration) {
   stopRoll();
   rolling = true;
-  $('tvNumber').classList.add('spinning');
-  setStatus('🎲 Đang quay số…');
+  setStatus('🎲 Lồng cầu đang quay…');
   clearWinner();
-
-  const lo = Number(min) || 1;
-  const hi = Number(max) || 90;
-  const start = performance.now();
-  const tick = () => {
-    if (!rolling) return;
-    const p = Math.min(1, (performance.now() - start) / duration);
-    const delay = 40 + Math.pow(p, 3) * 480;
-    $('tvNumber').textContent = pad(lo + Math.floor(Math.random() * (hi - lo + 1)));
-    rollTimer = setTimeout(tick, delay);
-  };
-  tick();
+  ballOut.classList.remove('show', 'pop');
+  BALLS.forEach((b) => b.classList.remove('picked'));
+  drum.classList.remove('stopped', 'slowdown');
+  drum.classList.add('spinning');
 }
 
 function stopRoll() {
   rolling = false;
   if (rollTimer) clearTimeout(rollTimer);
   rollTimer = null;
-  $('tvNumber').classList.remove('spinning');
 }
 
 function showNumber(num) {
   stopRoll();
-  const el = $('tvNumber');
-  el.textContent = pad(num);
-  el.classList.remove('pop');
-  void el.offsetWidth;
-  el.classList.add('pop');
-  setStatus(`Số vừa xổ: ${pad(num)} 🎉`);
+  drum.classList.remove('spinning');
+  drum.classList.add('slowdown');
+  // Dừng hẳn lồng sau 0.5s rồi đẩy bi ra
+  rollTimer = setTimeout(() => {
+    drum.classList.remove('slowdown');
+    drum.classList.add('stopped');
+    BALLS.forEach((b) => b.classList.toggle('picked', Number(b.dataset.n) === Number(num)));
+    $('outNumber').textContent = pad(num);
+    ballOut.classList.remove('show', 'pop');
+    void ballOut.offsetWidth;
+    ballOut.classList.add('show', 'pop');
+    setStatus(`Số vừa xổ: ${pad(num)} 🎉`);
+  }, 500);
+}
+
+function showNumberInstant(num) {
+  stopRoll();
+  drum.classList.remove('spinning', 'slowdown');
+  drum.classList.add('stopped');
+  BALLS.forEach((b) => b.classList.toggle('picked', Number(b.dataset.n) === Number(num)));
+  $('outNumber').textContent = pad(num);
+  ballOut.classList.add('show');
 }
 
 /* ---------------- Người chiến thắng ---------------- */
@@ -87,6 +125,24 @@ function renderHistory(drawn) {
   ).join('');
 }
 
+function renderTvLeft(list) {
+  const box = $('tvLeftList');
+  if (!box) return;
+  if (!list.length) {
+    box.innerHTML = '<div class="tv-left-empty">Chưa có người chơi</div>';
+    return;
+  }
+  box.innerHTML = list.map((p) => {
+    const kinh = p.kinh ? ` · 🏆${p.kinh}` : '';
+    const ve = p.tickets === 1 ? '1 vé' : `${p.tickets} vé`;
+    return `<div class="tv-left-row ${p.kinh ? 'win' : ''}">
+      <span class="l-name">${p.name}</span>
+      <span class="l-tickets">${ve}</span>
+      ${kinh ? `<span class="l-kinh">${kinh}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
 function renderTvPlayers(list) {
   const box = $('tvPlayersList');
   $('tvPlayersTitle').textContent = '👥 NGƯỜI CHƠI ĐÃ CHỐT';
@@ -100,6 +156,18 @@ function renderTvPlayers(list) {
   }).join('');
 }
 function renderTvResult(data) {
+  const left = $('tvLeftList');
+  if (left && data.players && data.players.length) {
+    left.innerHTML = data.players.map((p) => {
+      const ver = p.tickets === 1 ? '1 vé' : `${p.tickets} vé`;
+      const net = (p.net > 0 ? '+' : '') + fmt(p.net);
+      return `<div class="tv-left-row ${p.net > 0 ? 'win' : ''}">
+        <span class="l-name">${p.name}</span>
+        <span class="l-tickets">${ver}</span>
+        <span class="l-kinh">${net}</span>
+      </div>`;
+    }).join('');
+  }
   $('tvPlayersTitle').textContent = `🏁 TỔNG KẾT · ${data.winnerCount} hàng kinh · mỗi kinh ${fmt(data.per)}`;
   const box = $('tvPlayersList');
   if (!data.players || !data.players.length) {
@@ -121,11 +189,12 @@ function applyState(s) {
   $('tvPool').textContent = fmt(s.prize);
   $('tvPoolTop').textContent = `${fmt(s.prize)} (${s.collectedTickets || 0} vé)`;
   $('tvCollected').textContent = `${fmt(s.collected)} (${s.collectedTickets || 0} vé)`;
+  renderTvLeft(s.players || []);
   $('tvBet').textContent = `${fmt(s.config && s.config.betPerTicket)}/vé`;
   renderTvPlayers(s.players || []);
   renderHistory(s.drawn);
   if (!rolling && s.drawn && s.drawn.length) {
-    $('tvNumber').textContent = pad(s.drawn[s.drawn.length - 1]);
+    showNumberInstant(s.drawn[s.drawn.length - 1]);
     setStatus(`Số mới nhất: ${pad(s.drawn[s.drawn.length - 1])}`);
   }
   // Chỉ dựng lại banner khi mới tải trang/ván mới; các lượt sau do host:kinh quyết định
@@ -188,6 +257,7 @@ socket.on('draw:result', ({ number }) => {
   // nhưng vẫn làm mới lịch sử/stats qua host:state ngay sau đó.
 });
 socket.on('host:kinh', ({ latest, winners, prizePerWinner }) => {
+  if (window.LotoAudio) LotoAudio.kinh();
   showWinners(latest && latest.length ? latest : winners.slice(-3), prizePerWinner);
 });
 let tvResultTimer = null;
@@ -211,7 +281,11 @@ socket.on('game:reset', () => {
   if (tvResultTimer) clearTimeout(tvResultTimer);
   stateLoaded = false;
   stopRoll();
-  $('tvNumber').innerHTML = '<span class="tv-placeholder">--</span>';
+  drum.classList.remove('stopped', 'slowdown');
+  drum.classList.add('spinning');
+  ballOut.classList.remove('show', 'pop');
+  $('outNumber').textContent = '--';
+  BALLS.forEach((b) => b.classList.remove('picked'));
   clearWinner();
   $('tvHistory').innerHTML = '';
   renderTvPlayers([]);

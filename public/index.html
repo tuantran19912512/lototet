@@ -65,8 +65,8 @@
             </div>
             <div class="field">
               <label>Giữ số sau khi dừng (ms)</label>
-              <input id="cfgAutoHold" type="number" min="200" max="5000" step="100" value="900" />
-              <div class="hint">Số dừng lại hiện bao lâu trước khi sang số mới</div>
+              <input id="cfgAutoHold" type="number" min="200" max="10000" step="500" value="4000" />
+              <div class="hint">Số đứng yên 4s trước khi sang số mới (chỉnh 200–10000)</div>
             </div>
             <div class="field">
               <label>Mức cược mỗi vé (VNĐ)</label>
@@ -231,6 +231,7 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/audio.js"></script>
   <script src="/js/host.js"></script>
 </body>
 </html>
