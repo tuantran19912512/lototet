@@ -15,7 +15,7 @@ body.tv-body {
   width: 100%;
   height: 100vh;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto auto;
   row-gap: 1.2vh;
   padding: 1.6vh 2.5vw 1.6vh;
   background:
@@ -137,6 +137,38 @@ body.tv-body {
 }
 .tv-winner-info { font-size: clamp(11px, 1.1vw, 19px); color: #ffe6b0; }
 .tv-winner-money { font-size: clamp(14px, 1.5vw, 26px); font-weight: 800; color: var(--gold); }
+
+.tv-qr {
+  position: absolute; top: 2vh; right: 2.5vw; z-index: 3;
+  background: var(--cream); border: 2px solid var(--gold);
+  border-radius: 12px; padding: 6px; text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,.4);
+}
+.tv-qr img { display: block; width: clamp(70px, 8vw, 120px); height: clamp(70px, 8vw, 120px); }
+.tv-qr div { font-size: clamp(9px, .8vw, 13px); color: var(--red-dark); font-weight: 800; margin-top: 3px; }
+
+.tv-players {
+  position: relative;
+  width: min(1100px, 94%);
+  margin: 0 auto;
+  max-height: 15vh;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,212,94,.28);
+  padding: 6px 12px;
+}
+.tv-players-title { font-size: clamp(10px, 1vw, 17px); color: #ffd9a0; font-weight: 800; margin-bottom: 4px; }
+.tv-players-list { display: flex; flex-wrap: wrap; gap: 6px; overflow-y: auto; max-height: calc(15vh - 30px); }
+.tv-players-empty { font-size: clamp(10px, 1vw, 16px); color: #e8b98a; }
+.tv-player-chip {
+  font-size: clamp(10px, 1vw, 16px); font-weight: 700;
+  color: #fff; background: rgba(255,212,94,.12);
+  border: 1px solid rgba(255,212,94,.4); border-radius: 999px;
+  padding: 3px 10px; white-space: nowrap;
+}
+.tv-player-chip.win { border-color: var(--green); background: rgba(31,157,85,.22); color: #c9ffdd; }
+.tv-player-chip.lose { border-color: #ff8080; background: rgba(212,31,43,.18); color: #ffd0d0; }
 
 .tv-history {
   position: relative;

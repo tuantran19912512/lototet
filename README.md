@@ -19,7 +19,8 @@ Trang chơi lô tô trên **LAN**: màn hình chính (host) + trang người ch�
 4. Chọn một trong hai cách xổ:
    - **🎲 XỔ SỐ NGAY**: số quay nhanh rồi **chậm dần ~6 giây** mới dừng (chỉnh **Thời gian quay** 2–15s). Bấm liên tục sẽ bị từ chối.
    - **🤖 TỰ XỔ ĐẾN KHI CÓ KINH**: server tự xổ từng số (dùng **Quay tự động**, mặc định 2s/lượt, chỉnh 0.3–15s) và **tự dừng ngay khi có người kinh**. Nút biến thành **⏹ DỪNG TỰ XỔ** nếu muốn dừng sớm.
-5. Khi tự xổ dừng, màn hình chính hiện **bảng tổng kết**: tổng giải, tiền mỗi kinh, danh sách từng người (số vé, tiền cược, số hàng kinh, tiền thưởng) và **số tiền ròng** — thắng `+Xđ` (xanh), thua `-Xđ` (đỏ). Có nút **🔄 QUAY TIẾP LƯỢT MỚI** (tạo ván mới) hoặc **ĐÓNG**.
+5. Khi tự xổ dừng **có người kinh**, màn hình chính (và TV) hiện trước **màn chúc mừng**: danh sách người kinh kèm huy chương, tên, **kinh hàng mấy / kinh thứ mấy / mã vé / số tiền nhận** (có pháo hoa + nhạc). Sau **6 giây** (hoặc bấm nút **📊 XEM BẢNG KẾT QUẢ**) sẽ mở bảng kết quả.
+6. **Bảng kết quả** hiện: tổng giải, số hàng kinh, tiền mỗi kinh; mỗi người chơi với **mua bao nhiêu vé**, tiền cược, **kinh hàng nào (bao nhiêu vé)**, **tiền thưởng** và **số tiền ròng** — thắng `+Xđ` (xanh), thua `-Xđ` (đỏ). Có nút **🔄 QUAY TIẾP LƯỢT MỚI** (tạo ván mới) hoặc **ĐÓNG**.
 5. Khi trúng hàng → điện thoại báo **KINH** (rung + pháo hoa), bấm gửi phản hồi → hiện trên màn hình chính.
 6. **Kết thúc & Lưu** ghi ván vào lịch sử; **Ván mới** phát lại 200 vé.
 
@@ -71,7 +72,9 @@ lototet/
   - **📱 Xem trước ĐT**: mở khung điện thoại ngay trên trang quản lý để kiểm tra vé, đổi/chốt vé, banner đợi số và KINH. Vé xem trước là vé riêng, **không tính vào 200 vé** và **không hiện trong danh sách người chốt**.
   - **📺 Màn hình TV**: mở tab màn hình chiếu.
 - Màn hình TV: `http://<IP-máy>:3000/tv.html` — đem đi toàn màn hình trên TV/máy chiếu (nhấn F11).
-- TV hiện **số xổ cực to**, hiệu ứng quay đồng bộ với trang quản lý, lịch sử các số gần đây, và **banner người KINH ngay trong từng lượt** (tên, hàng, vị trí, tiền thưởng).
+- TV hiện **số xổ cực to**, hiệu ứng quay đồng bộ, lịch sử các số gần đây, **banner người KINH**, **mức cược + tổng giải**, **mã QR** (góc trên phải để quét vào chơi) và **danh sách người chơi đã chốt**.
+- Khi kết thúc lượt tự xổ, TV chuyển danh sách sang **bảng tổng kết**: tên, số vé và **số tiền ròng** (thắng `+…đ` xanh / thua `−…đ` đỏ).
+- Người mới bấm vào giữa lượt (đang xổ hoặc lượt đã chốt) sẽ bị từ chối với thông báo **"Đang trong lượt xổ, vui lòng chờ lượt tiếp theo!"**; bấm **Quay tiếp lượt mới** rồi họ mới tham gia được.
 - Cả hai trang nhận cùng dữ liệu realtime từ server; không cần cấu hình thêm.
 
 ## Font chữ

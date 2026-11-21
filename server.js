@@ -156,6 +156,7 @@ let rolling = false;
 // Chế độ tự xổ liên tục cho đến khi có người KINH
 let autoRunning = false;
 let roundStartWinners = 0;
+let roundClosed = false;   // lượt đã chốt (có kinh / đã dừng) -> người mới chờ lượt sau
 
 // Vé dùng để XEM TRƯỚC trên trang quản lý (tách riêng, không tính vào 200 vé)
 let previewTickets = [];
@@ -487,6 +488,7 @@ function nextAutoDraw() {
   }
   if (!available.length) {
     autoRunning = false;
+    roundClosed = true;
     io.emit('auto:stopped', Object.assign(buildRoundSummary(), { exhausted: true }));
     io.emit('auto:state', { running: false });
     return;
@@ -496,6 +498,7 @@ function nextAutoDraw() {
     if (!autoRunning) return;
     if (game.winners.length > roundStartWinners) {
       autoRunning = false;
+      roundClosed = true;
       io.emit('auto:state', { running: false });
       io.emit('auto:stopped', buildRoundSummary());
     } else {
@@ -528,6 +531,7 @@ io.on('connection', (socket) => {
     const betPerTicket = Math.max(0, Number(cfg.betPerTicket) || 5000);
     rolling = false;
     autoRunning = false;
+    roundClosed = false;
     previewTickets = [];
     io.emit('draw:cancel');
     game = freshGame({ maxPlayers, rollSeconds, autoRollSeconds, betPerTicket });
@@ -540,6 +544,7 @@ io.on('connection', (socket) => {
   socket.on('game:new', () => {
     rolling = false;
     autoRunning = false;
+    roundClosed = false;
     previewTickets = [];
     io.emit('draw:cancel');
     game = freshGame(game.config);
@@ -570,6 +575,7 @@ io.on('connection', (socket) => {
       return;
     }
     autoRunning = true;
+    roundClosed = false;
     roundStartWinners = game.winners.length;
     io.emit('auto:state', { running: true, round: roundStartWinners + 1 });
     nextAutoDraw();
@@ -578,6 +584,7 @@ io.on('connection', (socket) => {
   socket.on('auto:stop', () => {
     if (!autoRunning) return;
     autoRunning = false;
+    roundClosed = true;
     io.emit('auto:state', { running: false });
     io.emit('auto:stopped', Object.assign(buildRoundSummary(), { cancelled: true }));
   });
@@ -614,6 +621,12 @@ io.on('connection', (socket) => {
     // Số vé người chơi muốn mua (tối đa 4 vé/người)
     const want = Math.max(1, Math.min(4, Number(payload.ticketCount) || 1));
     let owned = findTickets(playerId);
+    if (!owned.length && (rolling || autoRunning || roundClosed)) {
+      socket.emit('player:rejected', {
+        message: 'Đang trong lượt xổ, vui lòng chờ lượt tiếp theo!',
+      });
+      return;
+    }
     if (!owned.length) {
       const free = game.tickets.filter((t) => !t.owner);
       if (free.length < want) {

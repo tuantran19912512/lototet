@@ -291,6 +291,8 @@ socket.on('host:ack', ({ name }) => {
 });
 
 socket.on('game:reset', () => {
+  hideCongrats();
+  closeResult();
   renderBigNumber(null, false);
   $('stageStatus').textContent = 'Ván mới đã bắt đầu. Quét QR để tham gia!';
   acks = [];
@@ -330,6 +332,71 @@ $('btnFinish').addEventListener('click', () => socket.emit('game:finish'));
 
 /* ---------------------- Tự xổ đến khi có KINH ---------------------- */
 let autoRunning = false;
+let congratsTimer = null;
+let pendingResult = null;
+
+function hideCongrats() {
+  if (congratsTimer) clearTimeout(congratsTimer);
+  congratsTimer = null;
+  $('congratsModal').classList.remove('show');
+}
+
+function showResultBoard(data) {
+  hideCongrats();
+  if (!data) return;
+  const { pool, per, winnerCount, winners, players, cancelled, exhausted } = data;
+  $('resultTitle').textContent = cancelled ? '⏹ ĐÃ DỪNG TỰ XỔ' : '🎉 KẾT QUẢ LƯỢT XỔ';
+  $('resultMeta').innerHTML = `Tổng giải: <b>${fmt(pool)}</b> · ${winnerCount} hàng kinh · mỗi kinh <b>${fmt(per)}</b>` +
+    (exhausted ? ' · Đã hết số!' : '');
+  const medal = ['🥇','🥈','🥉'];
+  if (!players.length) {
+    $('resultList').innerHTML = '<div class="empty">Chưa có người chơi nào.</div>';
+  } else {
+    $('resultList').innerHTML = players.map((p) => {
+      const won = p.net > 0;
+      const myWinners = winners.filter((w) => w.playerId === p.playerId);
+      const kinhRows = myWinners.map((w) => `hàng ${w.row}`).join(', ');
+      const kinhInfo = p.kinh
+        ? `${medal[(myWinners[0].position || 1) - 1] || '🎖️'} Kinh ${kinhRows} (${p.kinh} vé) · thưởng ${fmt(p.win)}`
+        : 'Không kinh';
+      const netText = (won ? '+' : '') + fmt(p.net);
+      return `<div class="result-row ${won ? 'win' : ''}">
+        <div class="r-name"><b>${escapeHtml(p.name)}</b> · mua ${p.tickets} vé · cược ${fmt(p.bet)}
+          <small>${kinhInfo} · ròng ${netText}</small></div>
+        <div class="r-net ${won ? 'plus' : 'minus'}">${netText}</div>
+      </div>`;
+    }).join('');
+  }
+  $('resultModal').classList.add('show');
+  $('stageStatus').textContent = cancelled ? 'Đã dừng tự xổ.' : '🏁 Lượt xổ kết thúc · Xem tổng kết';
+}
+
+function showCongrats(data) {
+  if (congratsTimer) clearInterval(congratsTimer);
+  pendingResult = data;
+  const { winners, per, winnerCount, pool } = data;
+  const medal = ['🥇','🥈','🥉'];
+  const list = winners.length ? winners : [];
+  $('congratsSub').textContent = `Có ${winnerCount} hàng kinh trong lượt này · Tổng giải ${fmt(pool)}`;
+  $('congratsList').innerHTML = list.map((w, i) => `
+    <div class="congrats-item" style="animation-delay:${i * 0.12}s">
+      <div class="c-medal">${medal[(w.position || 1) - 1] || '🎖️'}</div>
+      <div class="c-name">${escapeHtml(w.name)}</div>
+      <div class="c-detail">Kinh hàng ${w.row} · kinh thứ ${w.position} · vé ${escapeHtml(w.code || '')}</div>
+      <div class="c-money">+ ${fmt(per)}</div>
+    </div>`).join('');
+  $('congratsModal').classList.add('show');
+  beep('kinh');
+  // Tự mở bảng kết quả sau 6 giây, hoặc bấm nút để mở ngay
+  let left = 6;
+  $('congratsCount').textContent = `Bảng kết quả sẽ hiện sau ${left}s…`;
+  congratsTimer = setInterval(() => {
+    left--;
+    if (left <= 0) { showResultBoard(pendingResult); return; }
+    $('congratsCount').textContent = `Bảng kết quả sẽ hiện sau ${left}s…`;
+  }, 1000);
+}
+
 function setAutoUI(running) {
   autoRunning = !!running;
   $('btnAuto').textContent = running ? '⏹ DỪNG TỰ XỔ' : '🤖 TỰ XỔ ĐẾN KHI CÓ KINH';
@@ -340,13 +407,15 @@ $('btnAuto').addEventListener('click', () => {
   socket.emit(autoRunning ? 'auto:stop' : 'auto:start');
 });
 
+$('btnShowResult').addEventListener('click', () => showResultBoard(pendingResult));
+
 function closeResult() { $('resultModal').classList.remove('show'); }
 $('btnCloseResult').addEventListener('click', closeResult);
 $('resultModal').addEventListener('click', (e) => {
   if (e.target === $('resultModal')) closeResult();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeResult(); closePreview(); }
+  if (e.key === 'Escape') { hideCongrats(); closeResult(); closePreview(); }
 });
 $('btnNextRound').addEventListener('click', () => {
   closeResult();
@@ -361,32 +430,13 @@ socket.on('auto:state', ({ running }) => {
 
 socket.on('auto:stopped', (data) => {
   setAutoUI(false);
-  const { pool, per, winnerCount, winners, players, cancelled, exhausted } = data;
-  $('resultTitle').textContent = cancelled ? '⏹ ĐÃ DỪNG TỰ XỔ' : '🎉 CÓ NGƯỜI KINH!';
-  $('resultMeta').innerHTML = `Tổng giải: <b>${fmt(pool)}</b> · ${winnerCount} hàng kinh · mỗi kinh <b>${fmt(per)}</b>` +
-    (exhausted ? ' · Đã hết số!' : '');
-  const medal = ['🥇','🥈','🥉'];
-  if (!players.length) {
-    $('resultList').innerHTML = '<div class="empty">Chưa có người chơi nào.</div>';
-  } else {
-    $('resultList').innerHTML = players.map((p) => {
-      const won = p.net > 0;
-      const pos = winners.find((w) => w.playerId === p.playerId);
-      const tag = pos ? `${medal[(pos.position || 1) - 1] || '🎖️'} Kinh hàng ${pos.row}` : 'Không kinh';
-      const netText = (won ? '+' : '') + fmt(p.net);
-      return `<div class="result-row ${won ? 'win' : ''}">
-        <div class="r-name"><b>${escapeHtml(p.name)}</b> · ${p.tickets} vé · cược ${fmt(p.bet)}
-          <small>${tag} · thưởng ${fmt(p.win)}</small></div>
-        <div class="r-net ${won ? 'plus' : 'minus'}">${netText}</div>
-      </div>`;
-    }).join('');
+  if (data.cancelled || data.winnerCount === 0) {
+    showResultBoard(data);   // dừng tay / hết số: hiện thẳng bảng
+    return;
   }
-  $('resultModal').classList.add('show');
-  if (!cancelled) {
-    toast(`🎉 ${winnerCount} hàng kinh! Tổng giải ${fmt(pool)}`);
-    beep('kinh');
-  }
-  $('stageStatus').textContent = cancelled ? 'Đã dừng tự xổ.' : '🏁 Lượt xổ kết thúc · Xem tổng kết';
+  showCongrats(data);        // có kinh: chúc mừng trước, rồi mới bảng kết quả
+  toast(`🎉 ${data.winnerCount} hàng kinh! Tổng giải ${fmt(data.pool)}`);
+  $('stageStatus').textContent = '🎉 CÓ NGƯỜI KINH! Đang chúc mừng…';
 });
 
 /* ---------------------- Xem trước điện thoại ---------------------- */
