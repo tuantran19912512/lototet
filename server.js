@@ -357,13 +357,8 @@ function scanLan() {
 }
 
 /* ---------------- QR ---------------- */
-// Nếu đặt PUBLIC_URL (https://xxx.trycloudflare.com) thì QR dùng domain public,
-// ngược lại dùng IP LAN như bình thường.
-function buildJoinUrl() {
-  const pub = String(process.env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
-  if (pub) return `${pub}/play.html`;
-  return `http://${getLocalIP()}:${PORT}/play.html`;
-}
+// QR luôn dùng IP LAN trong cùng mạng
+function buildJoinUrl() { return `http://${getLocalIP()}:${PORT}/play.html`; }
 function sendQR(target) {
   const joinUrl = buildJoinUrl();
   QRCode.toDataURL(joinUrl, {
@@ -896,7 +891,6 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('  LÔ TÔ TẾT - Máy chủ đã sẵn sàng');
   console.log(`  Màn hình chính: http://localhost:${PORT}`);
   console.log(`  Người chơi quét QR: ${buildJoinUrl()}`);
-  if (process.env.PUBLIC_URL) console.log(`  🌐 Chế độ PUBLIC (Cloudflare tunnel) đang bật`);
   console.log(`  Vé 9x9 · ${game.config.maxPlayers} vé · cược ${game.config.betPerTicket.toLocaleString('vi-VN')}đ/vé`);
   console.log('================================================');
 });
