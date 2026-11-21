@@ -1,5 +1,7 @@
 # 🧧 XỔ LÔ TÔ NGÀY TẾT (vé 9×9)
 
+> ⚠️ **Tất cả số tiền trong trò chơi (cược, thưởng, ví, tổng giải…) chỉ là GIẢ TẠO để giải trí, không quy ra tiền thật, không dùng để cá cược tiền mặt.**
+
 Repo: **https://github.com/tuantran19912512/lototet**
 
 Trang chơi lô tô chạy trên **LAN**: màn hình chính (host), trang người chơi (điện thoại quét QR) và màn hình TV chiếu riêng. Không cần internet, không cần domain.
