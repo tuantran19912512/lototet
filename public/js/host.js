@@ -116,6 +116,7 @@ function renderStats() {
   $('statWaiting').textContent = state.waitingCount || 0;
   $('statWinners').textContent = (state.winners || []).length;
   $('statPrize').textContent = fmt(state.prize);
+  $('statCollected').textContent = `${fmt(state.collected)} (${state.collectedTickets || 0} vé)`;
 }
 
 function pad(n) { return String(n).padStart(2, '0'); }

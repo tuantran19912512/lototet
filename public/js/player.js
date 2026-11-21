@@ -29,16 +29,37 @@ wallet = {
   deposited: Number(wallet.deposited) || 0,
   bet: Number(wallet.bet) || 0,
   won: Number(wallet.won) || 0,
+  wins: Array.isArray(wallet.wins) ? wallet.wins : [],   // lịch sử từng lần KINH
 };
 function saveWallet() { localStorage.setItem('loto_wallet', JSON.stringify(wallet)); }
 function renderWallet() {
   $('walletDeposited').textContent = fmt(wallet.deposited);
   $('walletBet').textContent = fmt(wallet.bet);
-  $('walletWon').textContent = fmt(wallet.won);
+  $('walletWon').textContent = `${fmt(wallet.won)} · ${wallet.wins.length} lượt`;
   const balance = wallet.deposited - wallet.bet + wallet.won;
   $('walletBalance').textContent = fmt(balance);
   $('walletBalance').style.color = balance < 0 ? '#ff9a9a' : 'var(--gold)';
+  renderWinHistory();
 }
+
+function renderWinHistory() {
+  const box = $('walletWinHistory');
+  if (!box) return;
+  if (!wallet.wins.length) {
+    box.innerHTML = '<div class="wallet-empty">Chưa thắng lượt nào.</div>';
+    return;
+  }
+  box.innerHTML = wallet.wins.slice().reverse().map((w, i) => `
+    <div class="wallet-win-row">
+      <span>#${wallet.wins.length - i} · ${new Date(w.time).toLocaleString('vi-VN')}</span>
+      <b>+${fmt(w.amount)}</b>
+      <small>${w.code || ''} · hàng ${w.row}${w.position ? ' · kinh thứ ' + w.position : ''}</small>
+    </div>`).join('');
+}
+
+$('btnToggleWinHistory') && $('btnToggleWinHistory').addEventListener('click', () => {
+  $('walletWinHistory').classList.toggle('hidden');
+});
 renderWallet();
 
 $('btnTopup').addEventListener('click', () => {
@@ -239,7 +260,16 @@ function hideWaitingBanner() { $('waitingBanner').classList.add('hidden'); }
 socket.on('kinh:notify', (info) => {
   myWinInfo = info; acked = false;
   if (!isPreview) {
-    wallet.won += Number(info.prizePerWinner) || 0;
+    const amount = Number(info.prizePerWinner) || 0;
+    wallet.won += amount;
+    wallet.wins.push({
+      time: Date.now(),
+      amount,
+      code: info.winner && info.winner.code,
+      row: info.winner && info.winner.row,
+      position: info.winner && info.winner.position,
+    });
+    if (wallet.wins.length > 200) wallet.wins = wallet.wins.slice(-200);
     saveWallet(); renderWallet();
   }
   if (info.winner && info.winner.code && myTickets.some((t) => t.code === info.winner.code)) {

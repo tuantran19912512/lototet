@@ -172,11 +172,13 @@ function appendHistory() {
   });
   writeJSON(HISTORY_FILE, history.slice(0, 50));
 }
-// Tổng giải = tổng tiền cược thực thu = số vé đã bán × mức cược/vé
-function prizePool() {
-  const sold = game.tickets.filter((t) => t.owner).length;
-  return sold * (Number(game.config.betPerTicket) || 0);
+// Tổng tiền cược thực thu = SỐ VÉ ĐÃ CHỐT × mức cược/vé
+function totalCollected() {
+  const locked = game.tickets.filter((t) => t.locked && t.owner).length;
+  return locked * (Number(game.config.betPerTicket) || 0);
 }
+// Tổng giải = tổng tiền cược thực thu
+function prizePool() { return totalCollected(); }
 function prizePerWinner() {
   const pool = prizePool();
   return game.winners.length ? Math.floor(pool / game.winners.length) : pool;
@@ -265,6 +267,8 @@ function emitHostState() {
     waitingCount: countWaiting(),
     winners: game.winners,
     prize: prizePool(),
+    collected: totalCollected(),
+    collectedTickets: game.tickets.filter((t) => t.locked && t.owner).length,
     prizePerWinner: prizePerWinner(),
     players: lockedPlayers(),
     history: readJSON(HISTORY_FILE, []),
@@ -877,7 +881,9 @@ app.get('/api/state', (req, res) => {
     issued: game.tickets.filter((t) => t.owner).length,
     waitingCount: countWaiting(),
     players: lockedPlayers(), winners: game.winners,
-    prize: prizePool(), prizePerWinner: prizePerWinner(),
+    prize: prizePool(), collected: totalCollected(),
+    collectedTickets: game.tickets.filter((t) => t.locked && t.owner).length,
+    prizePerWinner: prizePerWinner(),
     history: readJSON(HISTORY_FILE, []),
   });
 });

@@ -12,9 +12,11 @@ Trang chơi lô tô chạy trên **LAN**: màn hình chính (host), trang ngư�
 - Mua **1–4 vé/người**, đổi/chốt vé. Chốt xong không đổi được; người vào giữa lượt bị từ chối ("chờ lượt tiếp theo").
 
 ## Tiền
-- **Tổng giải tự tính** = `số vé đã bán × mức cược/vé` (không có giải cố định). Mặc định 5.000đ/vé → 200 vé = 1.000.000đ.
+- **Tiền thu hiện tại** = `số vé đã CHỐT × mức cược/vé`, hiển thị realtime trên màn hình chính và TV (vd `15.000đ (3 vé)`). Vé mới nhận nhưng chưa chốt **không tính** vào tiền thu.
+- **Tổng giải tự tính** = tiền thu hiện tại (không có giải cố định). Mặc định 5.000đ/vé → 200 vé = 1.000.000đ.
 - **Tiền mỗi kinh** = `Tổng giải ÷ số hàng kinh`.
 - Ví trên điện thoại: **Số dư = Đã nạp − Đã trừ cược + Đã tích thưởng** (lưu `localStorage`; vé xem trước không trừ tiền).
+- **Lịch sử thắng**: mỗi lần KINH được ghi nhận (thời gian, mã vé, hàng kinh, kinh thứ mấy, số tiền). Trong ví, dòng **"Đã tích thưởng"** hiện `tổng tiền · N lượt`; bấm **🏆 Lịch sử thắng** để xem danh sách từng lần — kể cả khi người chơi thắng qua nhiều lượt/ván. Lưu tối đa 200 lượt gần nhất trên trình duyệt.
 - Mọi số tiền có dấu `.` hàng nghìn (vd `1.000.000đ`).
 
 ## Luồng chơi

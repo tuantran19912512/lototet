@@ -119,6 +119,8 @@ function applyState(s) {
   $('tvKinh').textContent = (s.winners || []).length;
   $('tvPrize').textContent = fmt(s.prizePerWinner);
   $('tvPool').textContent = fmt(s.prize);
+  $('tvPoolTop').textContent = `${fmt(s.prize)} (${s.collectedTickets || 0} vé)`;
+  $('tvCollected').textContent = `${fmt(s.collected)} (${s.collectedTickets || 0} vé)`;
   $('tvBet').textContent = `${fmt(s.config && s.config.betPerTicket)}/vé`;
   renderTvPlayers(s.players || []);
   renderHistory(s.drawn);
