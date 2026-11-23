@@ -135,8 +135,9 @@ function renderTvLeft(list) {
   box.innerHTML = list.map((p) => {
     const kinh = p.kinh ? ` · 🏆${p.kinh}` : '';
     const ve = p.tickets === 1 ? '1 vé' : `${p.tickets} vé`;
+    const mark = !p.online ? '💤' : p.paused ? '⏸️' : '';
     return `<div class="tv-left-row ${p.kinh ? 'win' : ''}">
-      <span class="l-name">${p.name}</span>
+      <span class="l-name">${mark} ${p.name}</span>
       <span class="l-tickets">${ve}</span>
       ${kinh ? `<span class="l-kinh">${kinh}</span>` : ''}
     </div>`;
@@ -160,8 +161,8 @@ function renderTvResult(data) {
   if (left && data.players && data.players.length) {
     left.innerHTML = data.players.map((p) => {
       const ver = p.tickets === 1 ? '1 vé' : `${p.tickets} vé`;
-      const net = (p.net > 0 ? '+' : '') + fmt(p.net);
-      return `<div class="tv-left-row ${p.net > 0 ? 'win' : ''}">
+      const net = p.paid ? (p.net > 0 ? '+' : '') + fmt(p.net) : '💤 không nhận thưởng';
+      return `<div class="tv-left-row ${p.paid && p.net > 0 ? 'win' : ''}">
         <span class="l-name">${p.name}</span>
         <span class="l-tickets">${ver}</span>
         <span class="l-kinh">${net}</span>
@@ -205,6 +206,9 @@ function applyState(s) {
     }
   }
 }
+
+// URL cho người chơi dùng máy tính (cùng mạng)
+if ($('tvPcUrl')) $('tvPcUrl').textContent = '💻 PC: ' + location.host + '/play-pc.html';
 
 /* ---------------- Đăng ký làm màn hình TV ---------------- */
 let tvName = localStorage.getItem('loto_tv_name') || '';

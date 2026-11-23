@@ -27,42 +27,46 @@
     </div>
 
     <div class="name-card">
-      <label>Tên của bạn</label>
+      <label>Tên của bạn (chỉ nhập 1 lần)</label>
       <div class="name-row">
         <input id="nameInput" type="text" maxlength="20" placeholder="Nhập tên..." />
-        <button id="btnSaveName" class="btn btn-ghost" style="padding:10px 14px;font-size:14px">Lưu</button>
+        <button id="btnSaveName" class="btn btn-primary" style="padding:10px 14px;font-size:14px">Xác nhận</button>
       </div>
+      <div id="nameLocked" class="name-locked hidden">✅ <b id="lockedName"></b> · đã khóa tên</div>
       <div class="buy-row">
-        <label for="ticketCount">Số vé muốn mua (tối đa 4)</label>
+        <label for="ticketCount">Số phiếu muốn mua (tối đa 4)</label>
         <select id="ticketCount">
-          <option value="1" selected>1 vé</option>
-          <option value="2">2 vé</option>
-          <option value="3">3 vé</option>
-          <option value="4">4 vé</option>
+          <option value="1" selected>1 phiếu</option>
+          <option value="2">2 phiếu</option>
+          <option value="3">3 phiếu</option>
+          <option value="4">4 phiếu</option>
         </select>
       </div>
+      <div class="bet-line">💵 Tiền cược = <b id="betPreview">5.000đ</b> <span>(số phiếu × mức cược/vé)</span></div>
+      <input id="cfgBetRate" type="hidden" value="5000" />
     </div>
 
     <div class="wallet-card">
-      <div class="wallet-top"><span>💰 Số dư</span><b id="walletBalance">0đ</b></div>
+      <div class="wallet-top"><span>💰 Tổng thưởng</span><b id="walletBalance">0đ</b></div>
       <div class="wallet-grid">
-        <div><span>Đã nạp</span><b id="walletDeposited">0đ</b></div>
-        <div><span>Đã trừ cược</span><b id="walletBet">0đ</b></div>
-        <div><span>Đã tích thưởng</span><b id="walletWon">0đ</b></div>
+        <div><span>Đã cược</span><b id="walletBet">0đ</b></div>
+        <div><span>Đã thưởng</span><b id="walletWon">0đ</b></div>
+        <div><span>Số lượt thắng</span><b id="walletWinsCount">0</b></div>
       </div>
       <button id="btnToggleWinHistory" class="wallet-toggle">🏆 Lịch sử thắng (bấm để mở/đóng)</button>
       <div id="walletWinHistory" class="wallet-win-list hidden"></div>
-      <div class="wallet-recharge">
-        <input id="topupInput" type="number" min="0" step="1000" placeholder="Nhập tiền nạp (VNĐ)..." />
-        <button id="btnTopup" class="btn btn-ghost">+ Nạp</button>
-      </div>
-      <div class="disclaimer" style="margin-top:10px">⚠️ Tiền trong ví chỉ là <b>giả tạo để giải trí</b>, không quy ra tiền thật!</div>
+      <div class="disclaimer" style="margin-top:10px">⚠️ Tiền cược và thưởng chỉ là <b>giả tạo để giải trí</b>, không quy ra tiền thật!</div>
     </div>
 
     <div class="ticket-actions">
       <button id="btnChange" class="btn btn-ghost">🔄 ĐỔI VÉ</button>
       <button id="btnLock" class="btn btn-primary">🔒 CHỐT VÉ</button>
     </div>
+    <div class="leave-row">
+      <button id="btnPause" class="btn btn-ghost">⏸️ TẠM RỜI</button>
+      <button id="btnQuit" class="btn btn-danger">🚪 THOÁT TRÒ CHƠI</button>
+    </div>
+    <div id="pauseBanner" class="pause-banner hidden">⏸️ Bạn đang tạm rời. Bấm <b>TIẾP TỤC</b> để nhận số và tiền thưởng (nếu kinh).</div>
     <div id="lockStatus" class="lock-status hidden">🔒 Đã chốt <b id="lockedCode"></b> — bạn đã vào danh sách người chơi!</div>
 
     <div id="waitingBanner" class="waiting-banner hidden">

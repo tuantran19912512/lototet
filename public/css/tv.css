@@ -276,6 +276,10 @@ body.tv-body {
 }
 .tv-qr img { display: block; width: clamp(70px, 8vw, 120px); height: clamp(70px, 8vw, 120px); }
 .tv-qr div { font-size: clamp(9px, .8vw, 13px); color: var(--red-dark); font-weight: 800; margin-top: 3px; }
+.tv-pc-url {
+  max-width: 130px; font-size: clamp(7px, .6vw, 10px) !important;
+  line-height: 1.2; word-break: break-all; opacity: .8; font-weight: 700 !important;
+}
 
 .tv-players {
   position: relative;

@@ -183,12 +183,18 @@ function prizePerWinner() {
   const pool = prizePool();
   return game.winners.length ? Math.floor(pool / game.winners.length) : pool;
 }
+function isPlayerOnline(playerId) {
+  return game.tickets.some((t) => t.owner === playerId && t.socketId);
+}
 function lockedPlayers() {
   const map = new Map();
   game.tickets.filter((t) => t.locked && t.owner).forEach((t) => {
     let p = map.get(t.owner);
     if (!p) {
-      p = { playerId: t.owner, name: t.name, tickets: 0, codes: [], kinh: 0 };
+      p = {
+        playerId: t.owner, name: t.name, tickets: 0, codes: [], kinh: 0,
+        online: isPlayerOnline(t.owner), paused: !!t.paused,
+      };
       map.set(t.owner, p);
     }
     p.tickets++;
@@ -530,7 +536,8 @@ function doDraw(manualNumber, onDone, durationOverride) {
       }
     });
     newKinh.forEach(({ ticket, winner }) => {
-      if (ticket.socketId) {
+      // Người đã tạm rời / mất kết nối lúc chốt lượt không nhận tiền thưởng
+      if (ticket.socketId && !ticket.paused) {
         io.to(ticket.socketId).emit('kinh:notify', {
           winner, prize: prizePool(),
           prizePerWinner: prizePerWinner(), totalWinners: game.winners.length,
@@ -559,7 +566,10 @@ function buildRoundSummary() {
   game.tickets.filter((t) => t.owner).forEach((t) => {
     let p = map.get(t.owner);
     if (!p) {
-      p = { playerId: t.owner, name: t.name, tickets: 0, bet: 0, kinh: 0, win: 0, net: 0 };
+      p = {
+        playerId: t.owner, name: t.name, tickets: 0, bet: 0, kinh: 0, win: 0, net: 0,
+        online: isPlayerOnline(t.owner), paid: false,
+      };
       map.set(t.owner, p);
     }
     p.tickets++;
@@ -567,7 +577,10 @@ function buildRoundSummary() {
   });
   roundWinners.forEach((w) => {
     const p = map.get(w.playerId);
-    if (p) { p.kinh++; p.win += per; }
+    if (!p) return;
+    p.kinh++;
+    // Chỉ nhận thưởng nếu còn online lúc chốt lượt
+    if (p.online) { p.win += per; p.paid = true; }
   });
   const players = [...map.values()].map((p) => Object.assign(p, { net: p.win - p.bet }));
   players.sort((a, b) => b.net - a.net);
@@ -764,14 +777,22 @@ io.on('connection', (socket) => {
       });
       return;
     }
+    const allFreeCount = game.tickets.filter((t) => !t.owner).length + owned.length;
+    if (allFreeCount < want) {
+      socket.emit('player:rejected', {
+        message: `Chỉ còn ${allFreeCount} vé trống, không đủ ${want} vé. Vui lòng giảm số vé!`,
+      });
+      return;
+    }
     if (!owned.length) {
       const free = game.tickets.filter((t) => !t.owner);
-      if (free.length < want) {
-        socket.emit('player:rejected', {
-          message: `Chỉ còn ${free.length} vé trống, không đủ ${want} vé. Vui lòng giảm số vé!`,
-        });
-        return;
-      }
+      shuffle(free);
+      owned = free.slice(0, want);
+      owned.forEach((t) => giveTicket(t, playerId, payload.name, socket.id));
+    } else if (!owned.some((t) => t.locked) && owned.length !== want) {
+      // Chưa chốt -> cho đổi số phiếu: trả vé cũ rồi phát lại số mới
+      owned.forEach((t) => releaseTicket(t));
+      const free = game.tickets.filter((t) => !t.owner);
       shuffle(free);
       owned = free.slice(0, want);
       owned.forEach((t) => giveTicket(t, playerId, payload.name, socket.id));
@@ -855,6 +876,30 @@ io.on('connection', (socket) => {
     owned.forEach((t) => { t.name = name; });
     game.winners.forEach((w) => { if (w.playerId === payload.playerId) w.name = name; });
     persistState();
+    emitHostState();
+  });
+
+  // Người chơi bấm "Tạm rời"/"Tiếp tục": vẫn giữ vé, nhưng đánh dấu để host/TV biết
+  socket.on('player:pause', (payload) => {
+    const owned = findTickets(payload && payload.playerId);
+    owned.forEach((t) => { t.paused = true; });
+    emitHostState();
+  });
+  socket.on('player:resume', (payload) => {
+    const owned = findTickets(payload && payload.playerId);
+    owned.forEach((t) => { t.paused = false; t.socketId = socket.id; });
+    emitHostState();
+  });
+  // Thoát hẳn: trả vé về kho (chỉ khi chưa chốt)
+  socket.on('player:quit', (payload) => {
+    const owned = findTickets(payload && payload.playerId);
+    if (!owned.length) return;
+    if (owned.some((t) => t.locked)) {
+      socket.emit('player:error', { message: 'Đã chốt vé, không thể thoát. Hãy báo host.' });
+      return;
+    }
+    owned.forEach((t) => releaseTicket(t));
+    socket.emit('player:quit-ok', {});
     emitHostState();
   });
 

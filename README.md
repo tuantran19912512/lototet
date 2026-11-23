@@ -17,8 +17,16 @@ Trang chơi lô tô chạy trên **LAN**: màn hình chính (host), trang ngư�
 - **Tiền thu hiện tại** = `số vé đã CHỐT × mức cược/vé`, hiển thị realtime trên màn hình chính và TV (vd `15.000đ (3 vé)`). Vé mới nhận nhưng chưa chốt **không tính** vào tiền thu.
 - **Tổng giải tự tính** = tiền thu hiện tại (không có giải cố định). Mặc định 5.000đ/vé → 200 vé = 1.000.000đ.
 - **Tiền mỗi kinh** = `Tổng giải ÷ số hàng kinh`.
-- Ví trên điện thoại: **Số dư = Đã nạp − Đã trừ cược + Đã tích thưởng** (lưu `localStorage`; vé xem trước không trừ tiền).
-- **Lịch sử thắng**: mỗi lần KINH được ghi nhận (thời gian, mã vé, hàng kinh, kinh thứ mấy, số tiền). Trong ví, dòng **"Đã tích thưởng"** hiện `tổng tiền · N lượt`; bấm **🏆 Lịch sử thắng** để xem danh sách từng lần — kể cả khi người chơi thắng qua nhiều lượt/ván. Lưu tối đa 200 lượt gần nhất trên trình duyệt.
+- Trên điện thoại: **chọn số phiếu muốn mua (1–4)** → tiền cược tự tính = `số phiếu × mức cược/vé`. Không có nạp tiền; đã cược, đã thưởng, tổng thưởng đều là số giả tạo để giải trí.
+- **Tên chỉ nhập 1 lần**: bấm **Xác nhận** là khóa luôn (không đổi tên được nữa).
+- **Lịch sử thắng**: mỗi lần KINH được ghi nhận (thời gian, mã vé, hàng kinh, kinh thứ mấy, số tiền). Bấm **🏆 Lịch sử thắng** để xem danh sách từng lần — kể cả khi thắng qua nhiều lượt/ván. Lưu tối đa 200 lượt gần nhất trên trình duyệt.
+- Có thể đổi số phiếu trước khi **Chốt vé**; sau khi chốt thì khóa cả số phiếu.
+
+## Rời màn hình / thoát giữa chừng
+- **⏸️ Tạm rời**: giữ vé, nhưng đánh dấu `⏸️` trên host/TV. Khi lượt chốt mà bạn vẫn tạm rời hoặc đã đóng tab (**💤 offline**) → **không nhận tiền thưởng** (đã kinh thì vẫn hiện nhưng ghi "không nhận thưởng").
+- **▶️ Tiếp tục**: bấm lại trước/sau trong lúc còn đang xổ → về trạng thái online, **vẫn được tính tiền** như bình thường.
+- **🚪 Thoát trò chơi**: chỉ dùng khi **chưa chốt vé** → trả toàn bộ vé về kho (người khác mua được). Đã chốt thì báo "Hãy báo host" (không tự thoát để tránh mất công chốt).
+- Host/TV hiện trạng thái `💤 offline` / `⏸️ tạm rời` cạnh tên từng người.
 - Mọi số tiền có dấu `.` hàng nghìn (vd `1.000.000đ`).
 
 ## Luồng chơi
@@ -53,6 +61,12 @@ Yêu cầu **Node.js LTS** (https://nodejs.org).
 - TV hiện **lồng cầu quay với 90 trái bi số**: lúc xổ lồng quay, khi ra số thì lồng dừng, **trái bi đó sáng lên và đẩy ra giữa màn hình** (thay cho kiểu nhảy số cũ).
 - TV còn có: banner KINH, QR (góc phải), **danh sách người tham gia + số vé họ mua (bên trái)**, mức cược/tổng giải dưới tiêu đề; khi kết thúc lượt, panel trái đổi sang tổng kết tiền ròng của từng người.
 - **📱 Xem trước ĐT** trên trang quản lý: khung điện thoại giả lập để test vé (không tính vào 200 vé).
+
+## Chơi trên máy tính (không cần quét QR)
+- Mở **`http://<IP-máy-chủ>:3000/play-pc.html`** trong trình duyệt máy tính (cùng mạng). Có nút **💻 Trang PC** trên màn hình chính để mở nhanh; góc QR trên TV cũng hiện URL này.
+- Giao diện PC 2 cột: **bên trái** gồm số vừa xổ, tên · số phiếu · ví, **"🏦 Tổng tiền giải hiện tại"** kèm **danh sách người tham gia** (tên, số vé, kinh, trạng thái `💤 offline` / `⏸️ tạm rời`); **bên phải** là tấm vé 9×9 (ô to, dễ xem).
+- Cách chơi y hệt điện thoại: nhập tên 1 lần → Xác nhận → chọn số phiếu (1–4) → Chốt vé.
+- Trang điện thoại vẫn là `http://<IP-máy>:3000/play.html` (hoặc quét QR). Cùng dùng chung một server/kho vé.
 
 ## Dùng trang quản lý trên điện thoại
 Được — mở `http://<IP-máy>:3000` (không dùng `localhost`). Đã có CSS responsive ≤640px. Tuy nhiên dùng máy tính/TV để điều khiển và xem tổng kết tiện hơn.

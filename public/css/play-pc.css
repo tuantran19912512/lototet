@@ -1,0 +1,105 @@
+/* ============================================================
+   GIAO DIỆN NGƯỜI CHƠI TRÊN MÁY TÍNH (2 cột)
+   Dùng chung player.js với trang điện thoại
+   ============================================================ */
+body.pc-app { min-height: 100vh; }
+
+.pc-app .player-app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 28px 70px;
+  display: grid;
+  /* Trái: điều khiển | Phải: số + vé (rộng hơn) */
+  grid-template-columns: minmax(330px, 0.85fr) minmax(0, 1.15fr);
+  column-gap: 26px;
+  row-gap: 12px;
+  align-items: start;
+}
+.pc-app .pc-left,
+.pc-app .pc-right { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+.pc-app .player-header { grid-column: 1 / -1; grid-row: 1; text-align: center; }
+.pc-app .player-header h1 { font-size: clamp(30px, 3.4vw, 46px); }
+.pc-app .player-header p { font-size: 15px; }
+.pc-tag {
+  display: inline-block; vertical-align: middle;
+  font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px;
+  color: #5a0a0a; background: var(--gold);
+  padding: 4px 10px; border-radius: 999px;
+  letter-spacing: 1px; font-weight: 800;
+}
+.pc-app .status-line { grid-column: 1 / -1; font-size: 14px; }
+.pc-app #previewBadge { grid-column: 1 / -1; }
+
+.game-info-card {
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,212,94,.4);
+  border-radius: 12px; padding: 14px 16px;
+}
+.game-info-top {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; color: #ffd9a0;
+  border-bottom: 1px dashed rgba(255,212,94,.3); padding-bottom: 8px;
+}
+.game-info-top b {
+  font-family: 'Baloo 2', sans-serif; font-size: 24px; color: var(--gold);
+}
+.game-info-sub { font-size: 11px; color: #e8b98a; margin-top: 6px; }
+.game-players-title {
+  font-size: 12px; color: #ffd9a0; font-weight: 800;
+  margin: 12px 0 6px;
+}
+.game-player-list { display: flex; flex-direction: column; gap: 5px; max-height: 200px; overflow-y: auto; }
+.game-empty { font-size: 11px; color: #e8b98a; font-style: italic; text-align: center; padding: 6px; }
+.game-player-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 9px; border-radius: 8px;
+  background: rgba(255,212,94,.1);
+  border: 1px solid rgba(255,212,94,.28);
+  font-size: 12px; color: #fff;
+}
+.game-player-row.me { border-color: var(--gold); background: rgba(255,212,94,.2); }
+.game-player-row .gp-name { flex: 1; }
+.game-player-row .gp-tickets { color: var(--gold); font-weight: 800; white-space: nowrap; }
+.game-player-row .gp-kinh { color: #7dffa8; font-weight: 800; white-space: nowrap; }
+.game-player-row .gp-status { font-size: 11px; white-space: nowrap; }
+
+.pc-app .name-card { padding: 16px 18px; }
+.pc-app .wallet-card { padding: 16px 18px; }
+.pc-app .ticket-actions { margin-top: 0; }
+
+.pc-app .last-draw { padding: 14px 18px; }
+.pc-app .last-draw b { font-size: clamp(56px, 7vw, 96px); }
+.pc-app #waitingBanner { font-size: 15px; }
+.pc-app .ticket-card { width: 100%; }
+
+/* Vé to hơn trên màn hình lớn */
+.pc-app .loto-cell {
+  height: clamp(38px, 4.4vh, 52px);
+  font-size: clamp(17px, 1.6vw, 24px);
+  border-radius: 7px;
+}
+.pc-app .row-label { font-size: 12px; width: 42px; }
+.pc-app .row-badge { font-size: 11px; padding: 4px 7px; }
+.pc-app .loto-head-left { font-size: 14px; }
+.pc-app .loto-head-left b { font-size: 19px; }
+.pc-app .ticket-name { font-size: 22px; }
+.pc-app .ticket-footer { font-size: 15px; margin-top: 16px; }
+
+.pc-app .bet-line { font-size: 16px; margin-top: 12px; }
+.pc-app .bet-line b { font-size: 24px; }
+.pc-app .buy-row label, .pc-app .name-card label { font-size: 14px; }
+.pc-app .buy-row select { font-size: 16px; padding: 10px 14px; }
+.pc-app .name-row input { font-size: 16px; padding: 12px 14px; }
+.pc-app .wallet-top { font-size: 17px; }
+.pc-app .wallet-top b { font-size: 28px; }
+.pc-app .wallet-grid b { font-size: 17px; }
+.pc-app .wallet-grid span { font-size: 12px; }
+
+/* Màn hình hẹp hơn:回落 về 1 cột */
+@media (max-width: 900px) {
+  .pc-app .player-app {
+    display: flex; flex-direction: column;
+    max-width: 560px; padding: 16px 16px 50px; gap: 12px;
+  }
+}

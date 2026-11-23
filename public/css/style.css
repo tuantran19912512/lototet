@@ -242,7 +242,8 @@ body::before {
   color: var(--gold);
 }
 .btn-danger { background: #8d1b22; }
-.btn-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+.btn-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 12px; }
+@media (max-width: 1200px) { .btn-row { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 980px) { .btn-row { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .btn-row { grid-template-columns: 1fr; } }
 
@@ -725,6 +726,25 @@ body::before {
 }
 .wallet-win-row small { font-size: 10px; color: #c9ffdd; }
 .wallet-empty { font-size: 11px; color: #e8b98a; font-style: italic; text-align: center; padding: 6px; }
+
+.leave-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.leave-row .btn { padding: 10px 8px; font-size: 13px; }
+.pause-banner {
+  margin-top: 8px; padding: 10px 12px; border-radius: 9px;
+  background: rgba(255,159,28,.2); border: 1px dashed #ff9f1c;
+  color: #ffdf9e; font-size: 12px; text-align: center; line-height: 1.5;
+}
+
+.name-locked {
+  margin-top: 8px; padding: 7px 10px; border-radius: 8px;
+  background: rgba(31,157,85,.18); border: 1px solid var(--green);
+  color: #c9ffdd; font-size: 12px; font-weight: 700; text-align: center;
+}
+.bet-line {
+  margin-top: 9px; text-align: center; font-size: 13px; color: #ffe6b0;
+}
+.bet-line b { font-family: 'Baloo 2', sans-serif; color: var(--gold); font-size: 18px; }
+.bet-line span { font-size: 11px; color: #e8b98a; }
 
 .wallet-recharge { display: flex; gap: 8px; margin-top: 10px; }
 .wallet-recharge input {

@@ -210,11 +210,13 @@ function renderPlayers() {
     box.innerHTML = '<div class="empty">Chưa có ai chốt vé.</div>';
     return;
   }
-  box.innerHTML = list.map((p) => `
-    <div class="history-item">
-      <span>🧧 <b>${escapeHtml(p.name)}</b> · vé <b>${escapeHtml(p.code)}</b></span>
-      <small>${p.kinh ? '🏆 ' + p.kinh + ' kinh' : 'Đã chốt'}</small>
-    </div>`).join('');
+  box.innerHTML = list.map((p) => {
+    const status = !p.online ? '💤 offline' : p.paused ? '⏸️ tạm rời' : (p.kinh ? '🏆 ' + p.kinh + ' kinh' : 'Đã chốt');
+    return `<div class="history-item">
+      <span>🧧 <b>${escapeHtml(p.name)}</b> · ${p.tickets} vé</span>
+      <small>${status}</small>
+    </div>`;
+  }).join('');
 }
 
 function renderAll() {
@@ -333,6 +335,12 @@ $('btnApplyConfig').addEventListener('click', () => {
 });
 
 $('btnNew').addEventListener('click', () => socket.emit('game:new'));
+$('btnPc').addEventListener('click', () => {
+  const w = window.open('/play-pc.html', '_blank');
+  toast('💻 Đã mở trang người chơi máy tính. Gửi URL này cho người chơi dùng PC.');
+  if (w) w.focus();
+});
+
 /* ---------------------- Chọn cách xuất ra TV ---------------------- */
 function closeTvModal() { $('tvModal').classList.remove('show'); }
 function isMac() { return /Mac|iPod|iPhone|iPad/.test(navigator.platform || '') || /Mac/.test(navigator.userAgent || ''); }
@@ -456,9 +464,9 @@ function showResultBoard(data) {
       const myWinners = winners.filter((w) => w.playerId === p.playerId);
       const kinhRows = myWinners.map((w) => `hàng ${w.row}`).join(', ');
       const kinhInfo = p.kinh
-        ? `${medal[(myWinners[0].position || 1) - 1] || '🎖️'} Kinh ${kinhRows} (${p.kinh} vé) · thưởng ${fmt(p.win)}`
+        ? `${medal[(myWinners[0].position || 1) - 1] || '🎖️'} Kinh ${kinhRows} (${p.kinh} vé) · ${p.paid ? 'thưởng ' + fmt(p.win) : '💤 không nhận thưởng (đã rời)'}`
         : 'Không kinh';
-      const netText = (won ? '+' : '') + fmt(p.net);
+      const netText = p.paid ? (won ? '+' : '') + fmt(p.net) : '0đ';
       return `<div class="result-row ${won ? 'win' : ''}">
         <div class="r-name"><b>${escapeHtml(p.name)}</b> · mua ${p.tickets} vé · cược ${fmt(p.bet)}
           <small>${kinhInfo} · ròng ${netText}</small></div>

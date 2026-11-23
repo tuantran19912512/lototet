@@ -16,29 +16,34 @@ if (!playerId) {
   sessionStorage.setItem('loto_player_id', playerId);
 }
 let playerName = localStorage.getItem('loto_player_name') || '';
-if (playerName) $('nameInput').value = playerName;
+const nameLocked = !!playerName;
+if (playerName) {
+  $('nameInput').value = playerName;
+  $('nameInput').disabled = true;
+  $('btnSaveName').classList.add('hidden');
+  $('nameLocked').classList.remove('hidden');
+  $('lockedName').textContent = playerName;
+}
 
 const isPreview = new URLSearchParams(location.search).has('preview');
 if (isPreview) $('previewBadge').classList.remove('hidden');
 
-/* ---------------- Ví tiền trên client ---------------- */
+/* ---------------- Ví tiền trên client (chỉ cược + thưởng) ---------------- */
 const CHARGE_KEY = 'loto_bet_charged';
 let wallet;
 try { wallet = JSON.parse(localStorage.getItem('loto_wallet')) || {}; } catch (e) { wallet = {}; }
 wallet = {
-  deposited: Number(wallet.deposited) || 0,
   bet: Number(wallet.bet) || 0,
   won: Number(wallet.won) || 0,
-  wins: Array.isArray(wallet.wins) ? wallet.wins : [],   // lịch sử từng lần KINH
+  wins: Array.isArray(wallet.wins) ? wallet.wins : [],
 };
 function saveWallet() { localStorage.setItem('loto_wallet', JSON.stringify(wallet)); }
 function renderWallet() {
-  $('walletDeposited').textContent = fmt(wallet.deposited);
   $('walletBet').textContent = fmt(wallet.bet);
-  $('walletWon').textContent = `${fmt(wallet.won)} · ${wallet.wins.length} lượt`;
-  const balance = wallet.deposited - wallet.bet + wallet.won;
-  $('walletBalance').textContent = fmt(balance);
-  $('walletBalance').style.color = balance < 0 ? '#ff9a9a' : 'var(--gold)';
+  $('walletWon').textContent = fmt(wallet.won);
+  $('walletBalance').textContent = fmt(wallet.won);
+  const c = $('walletWinsCount');
+  if (c) c.textContent = wallet.wins.length;
   renderWinHistory();
 }
 
@@ -62,14 +67,17 @@ $('btnToggleWinHistory') && $('btnToggleWinHistory').addEventListener('click', (
 });
 renderWallet();
 
-$('btnTopup').addEventListener('click', () => {
-  const amount = Math.max(0, Number($('topupInput').value) || 0);
-  if (!amount) return;
-  wallet.deposited += amount;
-  saveWallet(); renderWallet();
-  $('topupInput').value = '';
-  setStatus(`Đã nạp ${fmt(amount)} vào ví.`, true);
+// Cập nhật dòng xem trước tiền cược theo số phiếu chọn
+const betRate = () => Number($('cfgBetRate').value) || 5000;
+function updateBetPreview() {
+  const el = $('betPreview');
+  if (el) el.textContent = fmt(Number($('ticketCount').value || 1) * betRate());
+}
+$('ticketCount').addEventListener('change', () => {
+  updateBetPreview();
+  if (myTickets.length && !myTickets.some((t) => t.locked)) joinGame();
 });
+updateBetPreview();
 
 function joinGame() {
   socket.emit('player:join', {
@@ -93,14 +101,45 @@ function currentRows() {
   return (t && t.rows) || [];
 }
 
+/* ---------------- Thông tin chung của ván (trang PC) ---------------- */
+function renderGameInfo(s) {
+  if (!$('pcPrize')) return;
+  $('pcPrize').textContent = fmt(s.prize);
+  $('pcPrizeNote').textContent = s.collectedTickets
+    ? `${s.collectedTickets} vé đã chốt · ${fmt(s.collected)} tiền thu`
+    : 'Chưa có vé nào chốt';
+  const list = s.players || [];
+  $('pcPlayerCount').textContent = list.length;
+  const box = $('pcPlayerList');
+  if (!list.length) {
+    box.innerHTML = '<div class="game-empty">Chưa có người chơi</div>';
+    return;
+  }
+  box.innerHTML = list.map((p) => {
+    const me = p.playerId === playerId ? ' me' : '';
+    const status = p.kinh ? `🏆 ${p.kinh} kinh` : '';
+    const mark = !p.online ? '💤' : p.paused ? '⏸️' : '';
+    return `<div class="game-player-row${me}">
+      <span class="gp-name">${mark} ${escapeHtml(p.name)}${me ? ' (bạn)' : ''}</span>
+      <span class="gp-tickets">${p.tickets} vé</span>
+      ${status ? `<span class="gp-kinh">${status}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+socket.on('host:state', renderGameInfo);
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
 /* ---------------- Kết nối ---------------- */
 function setStatus(text, online) {
   $('statusText').textContent = text;
   $('dot').className = 'dot ' + (online ? 'online' : 'offline');
 }
 socket.on('connect', () => {
-  setStatus('Đã kết nối', true);
-  joinGame();
+  setStatus(nameLocked || isPreview ? 'Đã kết nối' : 'Nhập tên để bắt đầu', true);
+  if (nameLocked || isPreview) joinGame();
 });
 socket.on('disconnect', () => setStatus('Mất kết nối – đang thử lại…', false));
 socket.on('connect_error', () => setStatus('Không kết nối được máy chủ', false));
@@ -111,6 +150,10 @@ socket.on('player:rejected', ({ message }) => {
 
 /* ---------------- Nhận vé ---------------- */
 function applyTicketData(data) {
+  if (data.config && data.config.betPerTicket !== undefined) {
+    $('cfgBetRate').value = data.config.betPerTicket;
+    updateBetPreview();
+  }
   if (Array.isArray(data.tickets) && data.tickets.length) {
     myTickets = data.tickets;
   } else {
@@ -137,15 +180,14 @@ socket.on('ticket:assigned', (data) => {
   myWinInfo = null;
   acked = false;
   applyTicketData(data);
-  // Trừ tiền cược đúng 1 lần cho mỗi ván (vé xem trước không trừ tiền)
-  if (!isPreview && !sessionStorage.getItem(CHARGE_KEY)) {
-    const rate = Number(data.config && data.config.betPerTicket) || 0;
-    wallet.bet += myTickets.length * rate;
-    sessionStorage.setItem(CHARGE_KEY, '1');
+  // Tiền cược = số phiếu đang giữ × mức cược (đổi số phiếu thì cập nhật lại)
+  if (!isPreview) {
+    wallet.bet = myTickets.length * betRate();
     saveWallet();
   }
   renderWallet();
-  $('ticketCount').disabled = !isPreview;
+  const locked = myTickets.some((t) => t.locked);
+  $('ticketCount').disabled = locked;
   const n = myTickets.length;
   setStatus(`Đã có ${n} vé (${currentRows().length} hàng/vé). Chờ xổ số!`, true);
 });
@@ -168,7 +210,6 @@ socket.on('ticket:update', (data) => {
 });
 
 socket.on('game:reset', () => {
-  sessionStorage.removeItem(CHARGE_KEY);
   myTickets = []; activeCode = ''; myWinInfo = null; acked = false;
   $('winOverlay').classList.remove('show');
   hideWaitingBanner();
@@ -211,6 +252,7 @@ function applyLockState() {
   const locked = !!(t && t.locked);
   $('btnChange').disabled = locked;
   $('btnLock').disabled = locked;
+  $('ticketCount').disabled = locked;
   $('btnChange').textContent = locked ? '🔒 Đã chốt' : '🔄 ĐỔI VÉ';
   $('btnLock').textContent = locked ? '✅ ĐÃ CHỐT' : '🔒 CHỐT VÉ';
   $('lockStatus').classList.toggle('hidden', !locked);
@@ -356,13 +398,42 @@ socket.on('kinh:notify', () => {
   if (window.LotoAudio) LotoAudio.kinh();
 });
 
-/* ---------------- Đổi tên ---------------- */
+/* ---------------- Tạm rời / Tiếp tục / Thoát ---------------- */
+let paused = false;
+function setPaused(v) {
+  paused = v;
+  $('btnPause').textContent = v ? '▶️ TIẾP TỤC' : '⏸️ TẠM RỜI';
+  $('btnPause').classList.toggle('btn-primary', v);
+  $('pauseBanner').classList.toggle('hidden', !v);
+  socket.emit(v ? 'player:pause' : 'player:resume', { playerId });
+}
+$('btnPause').addEventListener('click', () => setPaused(!paused));
+$('btnQuit').addEventListener('click', () => {
+  if (confirm('Thoát trò chơi? Vé của bạn sẽ được trả lại kho (chỉ khi chưa chốt vé).')) {
+    socket.emit('player:quit', { playerId });
+  }
+});
+socket.on('player:quit-ok', () => {
+  myTickets = []; activeCode = '';
+  $('rowsGrid').innerHTML = '<div class="empty" style="color:#8a5a2b">Bạn đã thoát trò chơi.</div>';
+  setStatus('Đã thoát trò chơi. Vé đã trả lại kho.', false);
+  $('ticketCount').disabled = false;
+});
+socket.on('player:error', ({ message }) => setStatus(message, false));
+
+/* ---------------- Xác nhận tên (chỉ 1 lần) ---------------- */
 function saveName() {
+  if (nameLocked) return;
   const name = $('nameInput').value.trim() || 'Người chơi';
   playerName = name;
   localStorage.setItem('loto_player_name', name);
-  socket.emit('player:rename', { playerId, name });
+  // Khóa tên: không cho đổi nữa
+  $('nameInput').disabled = true;
+  $('btnSaveName').classList.add('hidden');
+  $('nameLocked').classList.remove('hidden');
+  $('lockedName').textContent = name;
   $('ticketName').textContent = '👤 ' + name;
+  joinGame();   // gửi tên vừa nhập lên server
 }
 $('btnSaveName').addEventListener('click', saveName);
 $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); });

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vé của tôi (Máy tính) - Lô Tô Tết</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/play-pc.css" />
+</head>
+<body class="pc-app">
+  <div class="player-app">
+    <div class="player-header">
+      <div class="logo">🧧</div>
+      <h1>VÉ XỔ LÔ TÔ TẾT 🎊 <span class="pc-tag">MÁY TÍNH</span></h1>
+      <p>Đủ cả một hàng ngang là KINH · Chúc bạn trúng lớn!</p>
+    </div>
+
+    <div class="status-line">
+      <span id="dot" class="dot offline"></span>
+      <span id="statusText">Đang kết nối…</span>
+    </div>
+    <div id="previewBadge" class="preview-badge hidden">👀 CHẾ ĐỘ XEM TRƯỚC · vé này không tính vào 200 vé</div>
+
+    <div class="pc-left">
+    <div class="last-draw">
+      <span>SỐ VỪA XỔ</span>
+      <b id="lastNumber">--</b>
+    </div>
+
+    <div class="name-card">
+      <label>Tên của bạn (chỉ nhập 1 lần)</label>
+      <div class="name-row">
+        <input id="nameInput" type="text" maxlength="20" placeholder="Nhập tên..." />
+        <button id="btnSaveName" class="btn btn-primary" style="padding:10px 14px;font-size:14px">Xác nhận</button>
+      </div>
+      <div id="nameLocked" class="name-locked hidden">✅ <b id="lockedName"></b> · đã khóa tên</div>
+      <div class="buy-row">
+        <label for="ticketCount">Số phiếu muốn mua (tối đa 4)</label>
+        <select id="ticketCount">
+          <option value="1" selected>1 phiếu</option>
+          <option value="2">2 phiếu</option>
+          <option value="3">3 phiếu</option>
+          <option value="4">4 phiếu</option>
+        </select>
+      </div>
+      <div class="bet-line">💵 Tiền cược = <b id="betPreview">5.000đ</b> <span>(số phiếu × mức cược/vé)</span></div>
+      <input id="cfgBetRate" type="hidden" value="5000" />
+    </div>
+
+    <div class="wallet-card">
+      <div class="wallet-top"><span>💰 Tổng thưởng</span><b id="walletBalance">0đ</b></div>
+      <div class="wallet-grid">
+        <div><span>Đã cược</span><b id="walletBet">0đ</b></div>
+        <div><span>Đã thưởng</span><b id="walletWon">0đ</b></div>
+        <div><span>Số lượt thắng</span><b id="walletWinsCount">0</b></div>
+      </div>
+      <button id="btnToggleWinHistory" class="wallet-toggle">🏆 Lịch sử thắng (bấm để mở/đóng)</button>
+      <div id="walletWinHistory" class="wallet-win-list hidden"></div>
+      <div class="disclaimer" style="margin-top:10px">⚠️ Tiền cược và thưởng chỉ là <b>giả tạo để giải trí</b>, không quy ra tiền thật!</div>
+    </div>
+
+    <div class="game-info-card">
+      <div class="game-info-top">
+        <span>🏦 TỔNG TIỀN GIẢI HIỆN TẠI</span>
+        <b id="pcPrize">0đ</b>
+      </div>
+      <div class="game-info-sub" id="pcPrizeNote">Chưa có vé nào chốt</div>
+      <div class="game-players-title">👥 NGƯỜI THAM GIA (<b id="pcPlayerCount">0</b>)</div>
+      <div id="pcPlayerList" class="game-player-list">
+        <div class="game-empty">Chưa có người chơi</div>
+      </div>
+    </div>
+
+    <div class="ticket-actions">
+      <button id="btnChange" class="btn btn-ghost">🔄 ĐỔI VÉ</button>
+      <button id="btnLock" class="btn btn-primary">🔒 CHỐT VÉ</button>
+    </div>
+    <div class="leave-row">
+      <button id="btnPause" class="btn btn-ghost">⏸️ TẠM RỜI</button>
+      <button id="btnQuit" class="btn btn-danger">🚪 THOÁT TRÒ CHƠI</button>
+    </div>
+    <div id="pauseBanner" class="pause-banner hidden">⏸️ Bạn đang tạm rời. Bấm <b>TIẾP TỤC</b> để nhận số và tiền thưởng (nếu kinh).</div>
+    <div id="lockStatus" class="lock-status hidden">🔒 Đã chốt <b id="lockedCode"></b> — bạn đã vào danh sách người chơi!</div>
+    </div><!-- /pc-left -->
+
+    <div class="pc-right">
+    <div id="waitingBanner" class="waiting-banner hidden">
+      ⏳ Hàng <b id="waitRow">1</b> còn <b>1 số</b> — đang đợi số <b id="waitNum">00</b>!
+    </div>
+
+    <div id="ticketTabs" class="ticket-tabs hidden"></div>
+
+    <div class="ticket-card loto-card">
+      <div class="loto-head">
+        <div class="loto-head-left">
+          <b>VÉ LÔ TÔ SỐ</b><br/>
+          <span>Vòng loại: <b id="lotoRound">9</b></span><br/>
+          <span>Số thứ tự: <b id="lotoSerial">...</b></span>
+        </div>
+        <div class="loto-head-right">
+          🎫🧧<br/>
+          <small>Kinh trúng<br/>tặng phổ chia đều</small>
+        </div>
+      </div>
+      <div id="ticketName" class="ticket-name"></div>
+      <div id="rowsGrid" class="rows-grid"></div>
+      <div class="ticket-footer">
+        <span id="progressText">0 / 0 số đã trúng</span>
+        <div class="progress"><div id="progressBar"></div></div>
+      </div>
+    </div>
+    </div><!-- /pc-right -->
+  </div>
+
+  <!-- Overlay báo KINH -->
+  <div id="winOverlay" class="overlay">
+    <div class="fireworks">🎆 🎉 🎊 ✨ 🎆</div>
+    <h2>KINH! 🎉</h2>
+    <div id="winPos" class="win-pos"></div>
+    <div id="winMoney" class="win-money"></div>
+    <div id="winNote" class="win-note"></div>
+    <div class="disclaimer" style="margin-top:10px">⚠️ Tiền thưởng chỉ là <b>giả tạo để giải trí</b>, không quy ra tiền thật!</div>
+    <button id="btnAck" class="btn btn-primary">📱 GỬI PHẢN HỒI VỀ MÀN HÌNH CHÍNH</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/audio.js"></script>
+  <script src="/js/player.js"></script>
+</body>
+</html>
