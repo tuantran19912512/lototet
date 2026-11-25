@@ -204,6 +204,13 @@ function lockedPlayers() {
   return [...map.values()];
 }
 function rowNumbers(row) { return row.cells.filter(Boolean); }
+function markDrawnRow(row, drawn) {
+  const cells = rowNumbers(row);
+  for (const cell of cells) cell.matched = drawn.has(cell.value);
+  const missing = cells.filter((cell) => !cell.matched);
+  row.complete = cells.length === PER_ROW && new Set(cells.map((c) => c.value)).size === PER_ROW && missing.length === 0;
+  return missing;
+}
 function countWaiting() {
   let n = 0;
   game.tickets.forEach((t) => {
@@ -456,13 +463,12 @@ function doDraw(manualNumber, onDone, durationOverride) {
 
     const newKinh = [];
     const newWaiting = [];
+    const drawn = new Set(game.drawn);
 
     game.tickets.forEach((ticket) => {
-      if (!ticket.owner) return;
+      if (!ticket.owner || !ticket.locked) return;
       ticket.rows.forEach((row, ri) => {
-        rowNumbers(row).forEach((c) => { if (c.value === num) c.matched = true; });
-        const unmatched = rowNumbers(row).filter((c) => !c.matched);
-        row.complete = unmatched.length === 0;
+        const unmatched = markDrawnRow(row, drawn);
 
         if (row.complete && !row.awarded) {
           row.awarded = true;
@@ -484,9 +490,7 @@ function doDraw(manualNumber, onDone, durationOverride) {
     // Vé xem trước: đánh dấu & báo kinh/đợi nhưng KHÔNG tính vào giải/danh sách
     previewTickets.forEach((ticket) => {
       ticket.rows.forEach((row, ri) => {
-        rowNumbers(row).forEach((c) => { if (c.value === num) c.matched = true; });
-        const unmatched = rowNumbers(row).filter((c) => !c.matched);
-        row.complete = unmatched.length === 0;
+        const unmatched = markDrawnRow(row, drawn);
 
         if (row.complete && !row.awarded) {
           row.awarded = true;

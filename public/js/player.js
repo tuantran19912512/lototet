@@ -327,7 +327,7 @@ socket.on('kinh:notify', (info) => {
 function showWin(info, celebrate) {
   const w = info.winner || {};
   const medal = ['🥇','🥈','🥉'][(w.position || 1) - 1] || '🎖️';
-  $('winPos').textContent = `${medal} KINH HÀNG ${w.row} · kinh thứ ${w.position}`;
+  $('winPos').textContent = `${medal} VÉ ${w.code || ''} · KINH HÀNG ${w.row} · kinh thứ ${w.position}`;
   if (info.totalWinners > 1) {
     $('winMoney').innerHTML = `Tiền thưởng (chia đều): <b>${fmt(info.prizePerWinner)}</b>`;
     $('winNote').textContent = `Tổng giải ${fmt(info.prize)} chia cho ${info.totalWinners} hàng kinh.`;
@@ -335,6 +335,8 @@ function showWin(info, celebrate) {
     $('winMoney').innerHTML = `Tiền thưởng: <b>${fmt(info.prizePerWinner || info.prize)}</b>`;
     $('winNote').textContent = 'Bạn là người kinh đầu tiên! Chúc mừng! 🎉';
   }
+  const winningRow = myTickets.find((ticket) => ticket.code === w.code)?.rows[w.row - 1];
+  if (winningRow) $('winNote').textContent += ` 5 số trên hàng trúng: ${winningRow.cells.filter(Boolean).map((c) => pad(c.value)).join(' · ')}.`;
   $('btnAck').disabled = false;
   $('btnAck').textContent = '📱 GỬI PHẢN HỒI VỀ MÀN HÌNH CHÍNH';
   $('winOverlay').classList.add('show');
